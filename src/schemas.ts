@@ -1,12 +1,7 @@
-import {
-  CustomOptions,
-  TSchema,
-} from '@sinclair/typebox';
-import {
-  pascalCase,
-} from 'change-case';
+import { CustomOptions, TSchema } from "@sinclair/typebox";
+import { pascalCase } from "change-case";
 
-import { SCHEMA_NAME_PROPERTY } from './constants';
+import { SCHEMA_NAME_PROPERTY } from "./constants";
 
 export interface TaggedSchema {
   /**
@@ -26,7 +21,7 @@ export interface TaggedSchema {
    * case you're pulling in JSON Schema schemas from outside sources and need to do some
    * doctoring.
    */
-  [SCHEMA_NAME_PROPERTY]: symbol,
+  [SCHEMA_NAME_PROPERTY]: symbol;
 }
 
 /**
@@ -36,6 +31,9 @@ export interface TaggedSchema {
  * If you decorate two separate types with the same `name`, this
  * will explode at speed. You have been warned. I will laugh.
  */
-export function schemaType<T extends TSchema & CustomOptions>(name: string, type: T): T & TaggedSchema {
+export function schemaType<T extends TSchema & CustomOptions>(
+  name: string,
+  type: T
+): T & TaggedSchema {
   return { ...type, [SCHEMA_NAME_PROPERTY]: Symbol(pascalCase(name)) };
 }

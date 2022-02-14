@@ -1,7 +1,13 @@
-import { OpenAPIObject, OperationObject, PathItemObject, ReferenceObject, SchemaObject } from 'openapi3-ts';
-import { TaggedSchema } from '../schemas';
+import {
+  OpenAPIObject,
+  OperationObject,
+  PathItemObject,
+  ReferenceObject,
+  SchemaObject,
+} from "openapi3-ts";
+import { TaggedSchema } from "../schemas";
 
-import { isNotReferenceObject, isTruthy } from '../util';
+import { isNotReferenceObject, isTruthy } from "../util";
 
 export type TaggedSchemaObject = SchemaObject & TaggedSchema;
 export type MaybeSchemaHolder = { schema?: SchemaObject | ReferenceObject };
@@ -22,7 +28,9 @@ export function operations(path: PathItemObject): Array<OperationObject> {
 
 export function mapPathItems<T>(
   oas: OpenAPIObject,
-  fn: (path: PathItemObject) => T,
+  fn: (path: PathItemObject) => T
 ): Array<T> {
-  return Object.values(oas.paths || {}).filter(isNotReferenceObject).flatMap(fn);
+  return Object.values(oas.paths || {})
+    .filter(isNotReferenceObject)
+    .flatMap(fn);
 }

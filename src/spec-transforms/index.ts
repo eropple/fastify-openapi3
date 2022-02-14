@@ -1,12 +1,10 @@
-import {
-  OpenAPIObject,
-} from 'openapi3-ts';
-import { SCHEMA_NAME_PROPERTY } from '../constants.js';
+import { OpenAPIObject } from "openapi3-ts";
+import { SCHEMA_NAME_PROPERTY } from "../constants.js";
 
-import { isNotReferenceObject, isTaggedSchema } from '../util.js';
-import { canonicalizeSchemas } from './canonicalize.js';
-import { findTaggedSchemas } from './find.js';
-import { fixupSpec } from './fixup.js';
+import { isNotReferenceObject, isTaggedSchema } from "../util.js";
+import { canonicalizeSchemas } from "./canonicalize.js";
+import { findTaggedSchemas } from "./find.js";
+import { fixupSpec } from "./fixup.js";
 
 /**
  * Functions that represent a transformation to be applied to a specification
@@ -15,9 +13,9 @@ import { fixupSpec } from './fixup.js';
  * These may be destructive (and then return the `oas` object
  * passed in) or pass an entirely new schema object, at your discretion.
  */
-export type OASTransformFunction =
-  (oas: OpenAPIObject) => OpenAPIObject | Promise<OpenAPIObject>;
-
+export type OASTransformFunction = (
+  oas: OpenAPIObject
+) => OpenAPIObject | Promise<OpenAPIObject>;
 
 /**
  * Walks the OAS spec to find the plugin's extension tag on all schemas that it can reach
@@ -53,4 +51,4 @@ export const canonicalizeAnnotatedSchemas: OASTransformFunction = (oas) => {
   fixupSpec(oas);
 
   return oas;
-}
+};

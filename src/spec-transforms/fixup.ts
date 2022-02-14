@@ -1,12 +1,27 @@
-import { CallbackObject, isSchemaObject, OpenAPIObject, PathItemObject, ReferenceObject, ResponseObject, SchemaObject } from 'openapi3-ts';
+import {
+  CallbackObject,
+  isSchemaObject,
+  OpenAPIObject,
+  PathItemObject,
+  ReferenceObject,
+  ResponseObject,
+  SchemaObject,
+} from "openapi3-ts";
 
-import { APPLICATION_JSON, SCHEMA_NAME_PROPERTY } from '../constants.js';
-import { TaggedSchema } from '../schemas.js';
-import { isNotReferenceObject, isTaggedSchema } from '../util.js';
-import { mapPathItems, MaybeSchemaHolder, operations, SchemaHolder } from './oas-helpers.js';
+import { APPLICATION_JSON, SCHEMA_NAME_PROPERTY } from "../constants.js";
+import { TaggedSchema } from "../schemas.js";
+import { isNotReferenceObject, isTaggedSchema } from "../util.js";
+import {
+  mapPathItems,
+  MaybeSchemaHolder,
+  operations,
+  SchemaHolder,
+} from "./oas-helpers.js";
 
 function refFromTaggedSchema(s: TaggedSchema): ReferenceObject {
-  return { $ref: `#/components/schemas/${s[SCHEMA_NAME_PROPERTY].description}` };
+  return {
+    $ref: `#/components/schemas/${s[SCHEMA_NAME_PROPERTY].description}`,
+  };
 }
 
 function fixupSchemaHolder(s: MaybeSchemaHolder): void {
@@ -22,17 +37,20 @@ function fixupSchemaHolder(s: MaybeSchemaHolder): void {
 }
 
 function fixupReferencesInSchema(s: SchemaObject) {
-  s.allOf = (s.allOf ?? []).map(s2 => {
+  s.allOf = (s.allOf ?? []).map((s2) => {
     isSchemaObject(s2) && fixupReferencesInSchema(s2);
     return isTaggedSchema(s2) ? refFromTaggedSchema(s2) : s2;
   });
 
-  s.anyOf = (s.anyOf ?? []).map(s2 => {
+  s.anyOf = (s.anyOf ?? []).map((s2) => {
     isSchemaObject(s2) && fixupReferencesInSchema(s2);
     return isTaggedSchema(s2) ? refFromTaggedSchema(s2) : s2;
   });
 
-  if (typeof s.additionalProperties === 'object' && isSchemaObject(s.additionalProperties)) {
+  if (
+    typeof s.additionalProperties === "object" &&
+    isSchemaObject(s.additionalProperties)
+  ) {
     fixupReferencesInSchema(s.additionalProperties);
 
     if (isTaggedSchema(s.additionalProperties)) {
@@ -40,7 +58,7 @@ function fixupReferencesInSchema(s: SchemaObject) {
     }
   }
 
-  if (typeof s.items === 'object' && isSchemaObject(s.items)) {
+  if (typeof s.items === "object" && isSchemaObject(s.items)) {
     fixupReferencesInSchema(s.items);
 
     if (isTaggedSchema(s.items)) {
@@ -58,39 +76,38 @@ function fixupReferencesInSchema(s: SchemaObject) {
 }
 
 function fixupPathItems(p: PathItemObject) {
-  p?.parameters
-    ?.filter(isNotReferenceObject)
-    ?.forEach(fixupSchemaHolder);
+  p?.parameters?.filter(isNotReferenceObject)?.forEach(fixupSchemaHolder);
 
-  operations(p).forEach(oper => {
-    oper?.parameters
-        ?.filter(isNotReferenceObject)
-        ?.forEach(fixupSchemaHolder);
+  operations(p).forEach((oper) => {
+    oper?.parameters?.filter(isNotReferenceObject)?.forEach(fixupSchemaHolder);
 
-    if (oper.requestBody &&
-        isNotReferenceObject(oper.requestBody)) {
+    if (oper.requestBody && isNotReferenceObject(oper.requestBody)) {
       const rb = oper.requestBody.content?.[APPLICATION_JSON];
-      if (rb) { fixupSchemaHolder(rb); }
+      if (rb) {
+        fixupSchemaHolder(rb);
+      }
     }
 
     const r = oper.responses;
     if (r) {
       Object.keys(r)
-        .map(k => r[k] as ResponseObject | ReferenceObject)
+        .map((k) => r[k] as ResponseObject | ReferenceObject)
         .filter(isNotReferenceObject)
-        .forEach(resp => {
+        .forEach((resp) => {
           const rpC = resp?.content?.[APPLICATION_JSON];
-          if (rpC) { fixupSchemaHolder(rpC); }
-        })
+          if (rpC) {
+            fixupSchemaHolder(rpC);
+          }
+        });
     }
 
     const c = oper.callbacks ?? {};
     Object.keys(c)
-      .map(k => c[k] as CallbackObject | ReferenceObject)
+      .map((k) => c[k] as CallbackObject | ReferenceObject)
       .filter(isNotReferenceObject)
-      .forEach(cbs =>
+      .forEach((cbs) =>
         // again with the gross reentrancy
-        (Object.values(cbs) as Array<PathItemObject>).forEach(fixupPathItems),
+        (Object.values(cbs) as Array<PathItemObject>).forEach(fixupPathItems)
       );
   });
 }
@@ -98,7 +115,8 @@ function fixupPathItems(p: PathItemObject) {
 export function fixupSpec(oas: OpenAPIObject): void {
   // first, top level schemas
   Object.values(oas.components!.schemas!)
-    .filter(isSchemaObject).forEach(fixupReferencesInSchema);
+    .filter(isSchemaObject)
+    .forEach(fixupReferencesInSchema);
 
   // then, everything else
   mapPathItems(oas, fixupPathItems);

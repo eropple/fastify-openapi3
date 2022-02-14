@@ -1,5 +1,5 @@
-import { SCHEMA_NAME_PROPERTY } from '../constants.js';
-import { TaggedSchemaObject } from './oas-helpers.js';
+import { SCHEMA_NAME_PROPERTY } from "../constants.js";
+import { TaggedSchemaObject } from "./oas-helpers.js";
 
 /**
  * Recursive function to untangle all these schemas.
@@ -13,14 +13,16 @@ import { TaggedSchemaObject } from './oas-helpers.js';
  * @param completed
  * @param seenSet
  */
- function canonicalizeSchema(
+function canonicalizeSchema(
   current: TaggedSchemaObject,
   completed: Record<string, TaggedSchemaObject>,
-  seenSet: Set<symbol>,
+  seenSet: Set<symbol>
 ) {
   const tag = current[SCHEMA_NAME_PROPERTY];
   if (!tag) {
-    throw new Error(`Should never happen - tagged schema w/o tag? ${JSON.stringify(current)}`);
+    throw new Error(
+      `Should never happen - tagged schema w/o tag? ${JSON.stringify(current)}`
+    );
   }
   if (!tag.description || tag.description.length < 1) {
     throw new Error("all schemas must be tagged with a non-empty string name");
@@ -44,7 +46,8 @@ import { TaggedSchemaObject } from './oas-helpers.js';
 
         ${JSON.stringify(existing)}
 
-        ${JSON.stringify(current)}`);
+        ${JSON.stringify(current)}`
+      );
     }
 
     // it's already completed, and it's us, so we'll fall through to the end.
@@ -53,7 +56,6 @@ import { TaggedSchemaObject } from './oas-helpers.js';
 
     completed[tag.description] = current;
   }
-
 
   // and now that we have completed our work, we remove ourselves from the seen set
   seenSet.delete(tag);
@@ -65,6 +67,6 @@ export function canonicalizeSchemas(
   const canonicalizedSchemas: Record<string, TaggedSchemaObject> = {};
   const seenSet = new Set<symbol>();
 
-  schemas.forEach(s => canonicalizeSchema(s, canonicalizedSchemas, seenSet));
+  schemas.forEach((s) => canonicalizeSchema(s, canonicalizedSchemas, seenSet));
   return canonicalizedSchemas;
 }

@@ -5,13 +5,13 @@ import {
   OpenApiBuilder,
   OpenAPIObject,
   OperationObject,
-} from 'openapi3-ts';
-import { OperationIdFn } from './operation-helpers';
+} from "openapi3-ts";
+import { OperationIdFn } from "./operation-helpers";
 
 export type OASBuilderFn = (oas: OpenApiBuilder) => void;
 
 export interface OAS3PluginPublishOptions {
-  ui?: null | 'rapidoc';
+  ui?: null | "rapidoc";
   json?: boolean;
   yaml?: boolean;
 }
@@ -57,12 +57,12 @@ export interface OAS3PluginOptions {
 }
 
 export type OAS3ResponseTable<T> = {
-  [k: string]: T,
+  [k: string]: T;
 };
 
 export type OAS3RouteResponseFields = {
   description: string;
-}
+};
 
 export interface OAS3RouteOptions {
   operationId?: string;

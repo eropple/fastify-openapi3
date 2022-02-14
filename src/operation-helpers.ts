@@ -1,5 +1,5 @@
-import { camelCase } from 'change-case';
-import { RouteOptions } from 'fastify';
+import { camelCase } from "change-case";
+import { RouteOptions } from "fastify";
 
 export type OperationIdFn = (route: RouteOptions) => string;
 
@@ -11,5 +11,5 @@ export const defaultOperationIdFn: OperationIdFn = (route) =>
       .replace(new RegExp(`^${(route as any).prefix}`), "")
       .replace("/", " ") +
       " " +
-      route.method,
+      route.method
   );
