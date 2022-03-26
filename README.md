@@ -1,7 +1,7 @@
 # `@eropple/fastify-openapi3` #
 _Because I just can't stop making OpenAPI libraries, I guess._
 
-[![NPM](https://www.npmjs.com/package/@eropple/fastify-openapi3)](https://img.shields.io/npm/v/@eropple/fastify-openapi3) [![CI](https://github.com/eropple/fastify-openapi3/actions/workflows/ci.yaml/badge.svg)](https://github.com/eropple/fastify-openapi3/actions/workflows/ci.yaml)
+[![NPM version](https://img.shields.io/npm/v/@eropple/fastify-openapi3)](https://www.npmjs.com/package/@eropple/fastify-openapi3) [![CI](https://github.com/eropple/fastify-openapi3/actions/workflows/ci.yaml/badge.svg)](https://github.com/eropple/fastify-openapi3/actions/workflows/ci.yaml)
 
 ## What is it? ##
 This is a library to help you generate [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0)-compliant specs from your [Fastify](https://www.fastify.io/) app. Others exist, but to my mind have some usability issues: lack of effective type inference, meh developer mouthfeel, and so on. Because of my [own](https://github.com/modern-project/modern-ruby) [background](https://github.com/eropple/nestjs-openapi3) in building OpenAPI libraries, and my growing appreciation for Fastify, I decided to take a crack at it.
