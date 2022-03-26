@@ -22,6 +22,10 @@ declare module "fastify" {
 
     schema?: FastifySchema & { response?: OAS3ResponseTable<SchemaObject> };
   }
+
+  interface RouteShorthandOptions {
+    oas?: OAS3RouteOptions;
+  }
 }
 
 declare module "openapi3-ts" {

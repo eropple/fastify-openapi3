@@ -16,5 +16,14 @@
     "include": [
       "./src/*.ts",
       "./src/**/*.ts"
-    ]
+    ],
+    "typedocOptions": {
+      "entryPoints": [
+        "src/plugin.ts",
+        "src/options.ts",
+        "src/operation-helpers.ts",
+      ],
+      "entryPointStrategy": "expand",
+      "out": "docs"
+    }
   }

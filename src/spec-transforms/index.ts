@@ -4,7 +4,7 @@ import { SCHEMA_NAME_PROPERTY } from "../constants.js";
 import { isNotReferenceObject, isTaggedSchema } from "../util.js";
 import { canonicalizeSchemas } from "./canonicalize.js";
 import { findTaggedSchemas } from "./find.js";
-import { fixupSpec } from "./fixup.js";
+import { fixupSpecSchemaRefs } from "./fixup.js";
 
 /**
  * Functions that represent a transformation to be applied to a specification
@@ -48,7 +48,11 @@ export const canonicalizeAnnotatedSchemas: OASTransformFunction = (oas) => {
   // step 3:  walk the doc again, this time touching everything that _isn't_ a
   //          top level schema. if we find a tagged schema, replace it with a
   //          JSON reference to the entry in `#/components`.
-  fixupSpec(oas);
+  fixupSpecSchemaRefs(oas);
+
+  // step 4:  clean up all the "not-JSON" stuff so users aren't confused later when
+  //          they see a "JSON specification" with symbols, etc. in it.
+  oas = JSON.parse(JSON.stringify(oas));
 
   return oas;
 };

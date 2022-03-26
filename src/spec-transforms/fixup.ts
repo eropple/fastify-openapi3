@@ -112,7 +112,7 @@ function fixupPathItems(p: PathItemObject) {
   });
 }
 
-export function fixupSpec(oas: OpenAPIObject): void {
+export function fixupSpecSchemaRefs(oas: OpenAPIObject): void {
   // first, top level schemas
   Object.values(oas.components!.schemas!)
     .filter(isSchemaObject)

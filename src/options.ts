@@ -11,23 +11,40 @@ import { OperationIdFn } from "./operation-helpers";
 export type OASBuilderFn = (oas: OpenApiBuilder) => void;
 
 export interface OAS3PluginPublishOptions {
-  ui?: null | "rapidoc";
-  json?: boolean;
-  yaml?: boolean;
+  /**
+   * TODO: implement API serving with rapidoc et al
+   */
+  ui?: null;
+  /**
+   * Serves a JSON version of your OpenAPI specification. If a string
+   * is passed, that will be the path of the JSON file (otherwise, it
+   * defaults to `openapi.json`).
+   *
+   * To skip, pass `false`.
+   */
+  json?: boolean | string;
+  /**
+   * Serves a YAML version of your OpenAPI specification. If a string
+   * is passed, that will be the path of the YAML file (otherwise, it
+   * defaults to `openapi.yaml`).
+   *
+   * To skip, pass `false`.
+   */
+  yaml?: boolean | string;
 }
 
 export interface OAS3PluginOptions {
-  /**
-   * The location where the API's documentation should be mounted.
-   * Defaults to `/docs`.
-   */
-  prefix?: string;
-
   /**
    * The base OpenAPI document information. Will be added verbatim
    * to the OpenAPI document.
    */
   openapiInfo: InfoObject;
+
+  /**
+   * If set to true, will throw an error if started with an invalid OpenAPI3
+   * document.
+   */
+  exitOnInvalidDocument?: boolean;
 
   /**
    * Invoked during plugin construction, before any routes are walked.
@@ -39,6 +56,10 @@ export interface OAS3PluginOptions {
    */
   postParse?: OASBuilderFn;
 
+  /**
+   * Determines how the OpenAPI specification will be parsed and specified for
+   * this package.
+   */
   publish?: OAS3PluginPublishOptions;
 
   /**

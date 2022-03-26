@@ -1,11 +1,14 @@
 import { FastifyPluginAsync, RouteOptions } from "fastify";
 import fp from "fastify-plugin";
+import { OpenApiBuilder, OperationObject, PathItemObject } from "openapi3-ts";
+import OpenAPISchemaValidator from "@seriousme/openapi-schema-validator";
+import * as YAML from 'js-yaml';
 
+// TODO: switch this to openapi-types; it's slightly more rigorous, but has some gremlins
 export * as OAS31 from "openapi3-ts";
 
-import { OAS3PluginOptions } from "./options.js";
-import { OAS3PluginOptionsError } from "./errors.js";
-import { OpenApiBuilder, OperationObject, PathItemObject } from "openapi3-ts";
+import { OAS3PluginOptions, OAS3PluginPublishOptions } from "./options.js";
+import { OAS3PluginOptionsError, OAS3SpecValidationError } from "./errors.js";
 import { canonicalizeAnnotatedSchemas } from "./spec-transforms/index.js";
 import { defaultOperationIdFn } from "./operation-helpers.js";
 import { APPLICATION_JSON } from "./constants.js";
@@ -22,6 +25,8 @@ export { OAS3PluginOptions } from "./options.js";
 //   Reply?: ReplyDefault;
 // }
 
+const validator = new OpenAPISchemaValidator();
+
 export const oas3Plugin: FastifyPluginAsync<OAS3PluginOptions> = fp(
   async (fastify, options) => {
     const pLog = fastify.log.child({ plugin: "OAS3Plugin" });
@@ -32,7 +37,6 @@ export const oas3Plugin: FastifyPluginAsync<OAS3PluginOptions> = fp(
 
     pLog.debug({ options }, "Initializing OAS3 plugin.");
 
-    const prefix = options.prefix ?? "/docs";
     const operationIdNameFn = options.operationIdNameFn ?? defaultOperationIdFn;
 
     // add our documentation routes here, safely ahead of the
@@ -42,7 +46,9 @@ export const oas3Plugin: FastifyPluginAsync<OAS3PluginOptions> = fp(
     // object-munging business during `onReady`.
     const routes: Array<RouteOptions> = [];
     fastify.addHook("onRoute", async (route) => {
-      routes.push(route);
+      if (route?.oas?.omit !== true) {
+        routes.push(route);
+      }
     });
 
     fastify.addHook("onReady", async () => {
@@ -125,9 +131,6 @@ export const oas3Plugin: FastifyPluginAsync<OAS3PluginOptions> = fp(
           [route.method]
             .flat()
             .forEach((method) => (p[method.toLowerCase()] = operation));
-
-          console.log("path:", p);
-          console.log("route:", route);
         }
 
         // and now let's normalize out all our schema, hold onto your butts
@@ -140,13 +143,66 @@ export const oas3Plugin: FastifyPluginAsync<OAS3PluginOptions> = fp(
           options.postParse(builder);
         }
 
+        doc = builder.rootDoc;
+
+        const result = await validator.validate(doc);
+        if (!result.valid) {
+          if (options.exitOnInvalidDocument) {
+            pLog.error({ openApiErrors: result.errors }, "Errors in OpenAPI validation.");
+            throw new OAS3SpecValidationError();
+          }
+
+          pLog.warn({ openApiErrors: result.errors }, "Errors in OpenAPI validation.");
+        }
+
         pLog.debug("Assigning completed OAS document to FastifyInstance.");
-        (fastify as any).openapiDocument = builder.rootDoc;
+        (fastify as any).openapiDocument = doc;
       } catch (err) {
         pLog.error({ err }, "Error during plugin instantiation.");
         throw err;
       }
     });
+
+    const publish: OAS3PluginPublishOptions = {
+      ui: options.publish?.ui ?? null,
+      json: options.publish?.json ?? true,
+      yaml: options.publish?.yaml ?? true,
+    };
+
+
+    if (publish.json) {
+      const path = typeof(publish.json) === 'string' ? publish.json : 'openapi.json';
+      let jsonContent: string | null = null;
+      fastify.get(`/${path}`, {
+        oas: { omit: true },
+      }, (req, rep) => {
+        if (!jsonContent) {
+          jsonContent = JSON.stringify(fastify.openapiDocument, null, 2);
+        }
+
+        rep
+          .code(200)
+          .header('Content-Type', 'application/json; charset=utf-8')
+          .send(jsonContent);
+      });
+    }
+
+    if (publish.yaml) {
+      const path = typeof(publish.yaml) === 'string' ? publish.yaml : 'openapi.yaml';
+      let yamlContent: string | null = null;
+      fastify.get(`/${path}`, {
+        oas: { omit: true },
+      }, (req, rep) => {
+        if (!yamlContent) {
+          yamlContent = YAML.dump(fastify.openapiDocument);
+        }
+
+        rep
+          .code(200)
+          .header('Content-Type', 'application/json; charset=utf-8')
+          .send(yamlContent);
+      });
+    }
   },
   "3.x"
 );
