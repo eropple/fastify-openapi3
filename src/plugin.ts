@@ -4,14 +4,17 @@ import { OpenApiBuilder, OperationObject, PathItemObject } from "openapi3-ts";
 import OpenAPISchemaValidator from "@seriousme/openapi-schema-validator";
 import * as YAML from 'js-yaml';
 
+
 // TODO: switch this to openapi-types; it's slightly more rigorous, but has some gremlins
 export * as OAS31 from "openapi3-ts";
 
+import "./extensions.js";
 import { OAS3PluginOptions, OAS3PluginPublishOptions } from "./options.js";
 import { OAS3PluginOptionsError, OAS3SpecValidationError } from "./errors.js";
 import { canonicalizeAnnotatedSchemas } from "./spec-transforms/index.js";
 import { defaultOperationIdFn } from "./operation-helpers.js";
 import { APPLICATION_JSON } from "./constants.js";
+import { rapidocSkeleton } from './ui/rapidoc.js';
 export { OAS3PluginOptions } from "./options.js";
 
 // export interface RequestGenericInterface {
@@ -164,7 +167,7 @@ export const oas3Plugin: FastifyPluginAsync<OAS3PluginOptions> = fp(
     });
 
     const publish: OAS3PluginPublishOptions = {
-      ui: options.publish?.ui ?? null,
+      ui: options.publish?.ui !== undefined ? 'rapidoc' : options.publish?.ui,
       json: options.publish?.json ?? true,
       yaml: options.publish?.yaml ?? true,
     };
@@ -176,13 +179,12 @@ export const oas3Plugin: FastifyPluginAsync<OAS3PluginOptions> = fp(
       fastify.get(`/${path}`, {
         oas: { omit: true },
       }, (req, rep) => {
-        if (!jsonContent) {
-          jsonContent = JSON.stringify(fastify.openapiDocument, null, 2);
-        }
+        jsonContent = jsonContent ?? JSON.stringify(fastify.openapiDocument, null, 2);
 
         rep
           .code(200)
           .header('Content-Type', 'application/json; charset=utf-8')
+          .header('Content-Disposition', 'inline')
           .send(jsonContent);
       });
     }
@@ -193,15 +195,28 @@ export const oas3Plugin: FastifyPluginAsync<OAS3PluginOptions> = fp(
       fastify.get(`/${path}`, {
         oas: { omit: true },
       }, (req, rep) => {
-        if (!yamlContent) {
-          yamlContent = YAML.dump(fastify.openapiDocument);
-        }
+        yamlContent = yamlContent ?? YAML.dump(fastify.openapiDocument);
 
         rep
           .code(200)
-          .header('Content-Type', 'application/json; charset=utf-8')
+          .header('Content-Type', 'application/x-yaml; charset=utf-8')
+          .header('Content-Disposition', 'inline')
           .send(yamlContent);
       });
+    }
+
+    if (publish.ui) {
+      switch (publish.ui) {
+        case 'rapidoc':
+          let rapidocContent: string | null = null;
+          fastify.get("/docs", {
+            oas: { omit: true },
+          }, (req, rep) => {
+            rapidocContent = rapidocContent ?? rapidocSkeleton(fastify.openapiDocument);
+            rep.code(200).header('Content-Type', 'text/html').send(rapidocContent);
+          })
+          break;
+      }
     }
   },
   "3.x"

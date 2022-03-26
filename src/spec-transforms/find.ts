@@ -14,7 +14,6 @@ import {
 import { isFalsy } from "utility-types";
 
 import { APPLICATION_JSON } from "../constants.js";
-import { TaggedSchema } from "../schemas.js";
 import {
   isNotPrimitive,
   isNotReferenceObject,

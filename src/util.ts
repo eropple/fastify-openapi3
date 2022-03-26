@@ -5,8 +5,9 @@ import {
   SchemaObject,
 } from "openapi3-ts";
 import { Falsy, isFalsy, isPrimitive, Primitive } from "utility-types";
-import { SCHEMA_NAME_PROPERTY } from "./constants";
-import { TaggedSchema } from "./schemas";
+
+import { SCHEMA_NAME_PROPERTY } from "./constants.js";
+import { TaggedSchema } from "./schemas.js";
 
 export function isTruthy<T extends Exclude<any, Falsy>>(
   item: T | null | undefined

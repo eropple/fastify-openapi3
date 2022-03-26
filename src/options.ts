@@ -6,15 +6,20 @@ import {
   OpenAPIObject,
   OperationObject,
 } from "openapi3-ts";
-import { OperationIdFn } from "./operation-helpers";
+
+import { OperationIdFn } from "./operation-helpers.js";
 
 export type OASBuilderFn = (oas: OpenApiBuilder) => void;
 
 export interface OAS3PluginPublishOptions {
   /**
-   * TODO: implement API serving with rapidoc et al
+   * If `'rapidoc'`, serves a Rapidoc UI at `/docs`.
+   *
+   * If `null`, does not serve any explorer UI at all.
+   *
+   * Defaults to `'rapidoc'`.
    */
-  ui?: null;
+  ui?: 'rapidoc' | null;
   /**
    * Serves a JSON version of your OpenAPI specification. If a string
    * is passed, that will be the path of the JSON file (otherwise, it

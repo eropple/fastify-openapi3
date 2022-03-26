@@ -5,9 +5,9 @@ import {
   ReferenceObject,
   SchemaObject,
 } from "openapi3-ts";
-import { TaggedSchema } from "../schemas";
 
-import { isNotReferenceObject, isTruthy } from "../util";
+import { TaggedSchema } from "../schemas.js";
+import { isNotReferenceObject, isTruthy } from "../util.js";
 
 export type TaggedSchemaObject = SchemaObject & TaggedSchema;
 export type MaybeSchemaHolder = { schema?: SchemaObject | ReferenceObject };

@@ -1,7 +1,7 @@
 import { CustomOptions, TSchema } from "@sinclair/typebox";
 import { pascalCase } from "change-case";
 
-import { SCHEMA_NAME_PROPERTY } from "./constants";
+import { SCHEMA_NAME_PROPERTY } from "./constants.js";
 
 export interface TaggedSchema {
   /**

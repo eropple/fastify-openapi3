@@ -15,7 +15,6 @@ import {
   mapPathItems,
   MaybeSchemaHolder,
   operations,
-  SchemaHolder,
 } from "./oas-helpers.js";
 
 function refFromTaggedSchema(s: TaggedSchema): ReferenceObject {

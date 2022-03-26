@@ -33,9 +33,7 @@ describe('plugin', () => {
             200: PingResponse,
           },
         },
-        oas: {
-
-        },
+        oas: {},
         handler: async (req, reply) => {
           return { pong: true };
         }
@@ -87,9 +85,7 @@ describe('plugin', () => {
             200: PingResponse,
           },
         },
-        oas: {
-
-        },
+        oas: {},
         handler: async (req, reply) => {
           return { pong: true };
         }

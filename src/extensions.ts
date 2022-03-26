@@ -2,11 +2,11 @@ import "fastify";
 import "openapi3-ts";
 import "@sinclair/typebox";
 
+import { FastifySchema } from "fastify";
 import type { OpenAPIObject, SchemaObject } from "openapi3-ts";
 
 import type { TaggedSchema } from "./schemas.js";
 import type { OAS3ResponseTable, OAS3RouteOptions } from "./options.js";
-import { FastifySchema } from "fastify";
 
 declare module "fastify" {
   interface FastifyInstance {
