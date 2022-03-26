@@ -19,7 +19,7 @@ export interface OAS3PluginPublishOptions {
    *
    * Defaults to `'rapidoc'`.
    */
-  ui?: 'rapidoc' | null;
+  ui?: "rapidoc" | null;
   /**
    * Serves a JSON version of your OpenAPI specification. If a string
    * is passed, that will be the path of the JSON file (otherwise, it

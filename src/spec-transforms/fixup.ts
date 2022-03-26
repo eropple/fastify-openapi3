@@ -11,11 +11,7 @@ import {
 import { APPLICATION_JSON, SCHEMA_NAME_PROPERTY } from "../constants.js";
 import { TaggedSchema } from "../schemas.js";
 import { isNotReferenceObject, isTaggedSchema } from "../util.js";
-import {
-  mapPathItems,
-  MaybeSchemaHolder,
-  operations,
-} from "./oas-helpers.js";
+import { mapPathItems, MaybeSchemaHolder, operations } from "./oas-helpers.js";
 
 function refFromTaggedSchema(s: TaggedSchema): ReferenceObject {
   return {

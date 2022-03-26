@@ -16,7 +16,7 @@
     "include": [
       "./src/*.ts",
       "./src/**/*.ts"
-    ],
+, "test-manual/rapidoc.test.ts"    ],
     "typedocOptions": {
       "entryPoints": [
         "src/plugin.ts",
