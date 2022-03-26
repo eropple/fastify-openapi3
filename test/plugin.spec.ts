@@ -15,7 +15,6 @@ const pluginOpts: OAS3PluginOptions = {
 
 describe('plugin', () => {
   test('can add a base GET route', async () => {
-    // TODO: fastify acts oddly when you pass the same schema objects to multiple Fastify servers?
     const PingResponse = schemaType('PingResponse', Type.Object({ pong: Type.Boolean() }));
     type PingResponse = Static<typeof PingResponse>;
 
@@ -67,7 +66,6 @@ describe('plugin', () => {
   });
 
   test('will serve an OAS json doc', async () => {
-    // TODO: fastify acts oddly when you pass the same schema objects to multiple Fastify servers?
     const PingResponse = schemaType('PingResponse', Type.Object({ pong: Type.Boolean() }));
     type PingResponse = Static<typeof PingResponse>;
 

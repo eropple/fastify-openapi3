@@ -32,15 +32,19 @@ function fixupSchemaHolder(s: MaybeSchemaHolder): void {
 }
 
 function fixupReferencesInSchema(s: SchemaObject) {
-  s.allOf = (s.allOf ?? []).map((s2) => {
-    isSchemaObject(s2) && fixupReferencesInSchema(s2);
-    return isTaggedSchema(s2) ? refFromTaggedSchema(s2) : s2;
-  });
+  if (s.allOf) {
+    s.allOf = s.allOf.map((s2) => {
+      isSchemaObject(s2) && fixupReferencesInSchema(s2);
+      return isTaggedSchema(s2) ? refFromTaggedSchema(s2) : s2;
+    });
+  }
 
-  s.anyOf = (s.anyOf ?? []).map((s2) => {
-    isSchemaObject(s2) && fixupReferencesInSchema(s2);
-    return isTaggedSchema(s2) ? refFromTaggedSchema(s2) : s2;
-  });
+  if (s.anyOf) {
+    s.anyOf = s.anyOf.map((s2) => {
+      isSchemaObject(s2) && fixupReferencesInSchema(s2);
+      return isTaggedSchema(s2) ? refFromTaggedSchema(s2) : s2;
+    });
+  }
 
   if (
     typeof s.additionalProperties === "object" &&
