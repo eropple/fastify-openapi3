@@ -1,8 +1,7 @@
 import Fastify, { FastifyInstance } from 'fastify';
 import { Static, Type } from '@sinclair/typebox';
 
-import { schemaType } from '../src/schemas.js';
-import { oas3Plugin, OAS3PluginOptions } from '../src/plugin.js';
+import OAS3Plugin, { OAS3PluginOptions, schemaType } from '../src/index.js';
 
 const PingResponse = schemaType('PingResponse', Type.Object({ pong: Type.Boolean() }));
 type PingResponse = Static<typeof PingResponse>;
@@ -21,7 +20,7 @@ const pluginOpts: OAS3PluginOptions = {
 
 const run = async () => {
   const fastify = Fastify({ logger: { level: 'error' } });
-  await fastify.register(oas3Plugin, { ...pluginOpts });
+  await fastify.register(OAS3Plugin, { ...pluginOpts });
 
   // we do this inside a prefixed scope to smoke out prefix append errors
   await fastify.register(async (fastify: FastifyInstance) => {
@@ -33,7 +32,13 @@ const run = async () => {
           200: PingResponse,
         },
       },
-      oas: {},
+      oas: {
+        operationId: 'pingPingPingAndDefinitelyNotPong',
+        summary: "a ping to the server",
+        description: "This ping to the server lets you know that it has not been eaten by a grue.",
+        deprecated: false,
+        tags: ['meta'],
+      },
       handler: async (req, reply) => {
         return { pong: true };
       }
