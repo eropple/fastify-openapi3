@@ -1,11 +1,18 @@
 {
   "name": "@eropple/fastify-openapi3",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Ed Ropple",
   "license": "LGPL-3.0",
   "type": "module",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "*",
+    "src/**/*",
+    "test/**/*",
+    "dist/**/*",
+    "examples/**/*"
+  ],
   "scripts": {
     "build": "tsc",
     "watch": "yarn run -s build --watch",
