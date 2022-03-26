@@ -11,7 +11,8 @@
     "watch": "yarn run -s build --watch",
     "test": "jest",
     "format:check": "prettier --check ./src",
-    "format:write": "prettier --write ./src"
+    "format:write": "prettier --write ./src",
+    "demo": "node --loader ts-node/esm ./test-manual/rapidoc.test.ts"
   },
   "dependencies": {
     "@seriousme/openapi-schema-validator": "^1.7.0",
