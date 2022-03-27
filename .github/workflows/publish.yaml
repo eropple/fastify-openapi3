@@ -20,8 +20,13 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: yarn install --frozen-lockfile
       - run: yarn run build
+        if: matrix.os == 'ubuntu-latest'
       - run: yarn run lint
+        if: matrix.os == 'ubuntu-latest'
       - run: yarn run format:check
+        if: matrix.os == 'ubuntu-latest'
+      - run: yarn test
+
 
   publish-npm:
     needs: build

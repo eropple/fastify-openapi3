@@ -19,4 +19,7 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn run build
       - run: yarn run lint
+        if: matrix.os == 'ubuntu-latest'
       - run: yarn run format:check
+        if: matrix.os == 'ubuntu-latest'
+      - run: yarn test
