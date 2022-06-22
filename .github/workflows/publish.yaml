@@ -1,8 +1,10 @@
 name: CI
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+    - "v[0-9]+.[0-9]+.[0-9]+"
+    - "v[0-9]+.[0-9]+.[0-9]+-[a-z]+.[0-9]+"
 
 jobs:
   build:
@@ -37,6 +39,18 @@ jobs:
         with:
           node-version: 16
           registry-url: https://registry.npmjs.org/
+
+      - name: Set VERSION variable from tag
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
+      - name: Print version
+        run: echo $VERSION
+      - name: Verify commit exists in origin/main
+        run: |
+          git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+          git branch --remote --contains | grep origin/main
+      - name: Verify that the version exists in package.json
+        run: 'sudo apt-get install -y jq && [[ "$(jq -r ".version" package.json)" == "$VERSION" ]]'
+
       - run: yarn install --frozen-lockfile
       - run: yarn run build
       - run: npm publish --access=public
