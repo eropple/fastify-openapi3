@@ -242,5 +242,5 @@ export const oas3Plugin: FastifyPluginAsync<OAS3PluginOptions> = fp(
       }
     }
   },
-  "4.x",
+  "4.x"
 );
