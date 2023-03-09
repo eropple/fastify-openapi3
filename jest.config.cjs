@@ -1,16 +1,9 @@
 const { defaultsESM } = require('ts-jest/presets');
 
+/** @type {import('jest').Config} */
 module.exports = {
-  extensionsToTreatAsEsm: [...defaultsESM.extensionsToTreatAsEsm],
-  transform: {
-    ...defaultsESM.transform,
-  },
+  ...defaultsESM,
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
-  },
-  globals: {
-    'ts-jest': {
-      useESM: true,
-    },
   },
 };
