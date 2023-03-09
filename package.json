@@ -23,7 +23,7 @@
     "demo": "node --loader ts-node/esm ./examples/start-server.ts"
   },
   "dependencies": {
-    "@seriousme/openapi-schema-validator": "^2.1.0",
+    "@seriousme/openapi-schema-validator": "1.7.1",
     "@sinclair/typebox": "^0.25.24",
     "ajv": "^8.12.0",
     "change-case": "4.1.2",

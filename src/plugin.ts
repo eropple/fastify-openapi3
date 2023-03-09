@@ -1,7 +1,7 @@
 import { FastifyPluginAsync, RouteOptions } from "fastify";
 import fp from "fastify-plugin";
 import { OpenApiBuilder, OperationObject, PathItemObject } from "openapi3-ts";
-import { Validator as OpenAPISchemaValidator } from "@seriousme/openapi-schema-validator";
+import OpenAPISchemaValidator from "@seriousme/openapi-schema-validator";
 import * as YAML from "js-yaml";
 
 // TODO: switch this to openapi-types; it's slightly more rigorous, but has some gremlins
