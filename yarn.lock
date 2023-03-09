@@ -842,12 +842,12 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@seriousme/openapi-schema-validator@^1.7.0":
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/@seriousme/openapi-schema-validator/-/openapi-schema-validator-1.7.0.tgz#c5d33c9a1a256f96ccb24f56c035ada6815a73c7"
-  integrity sha512-W672oLvvG21ueCHJOqfY+7agI1JZFGGhPp4LPzICXRpf43y/zpCogYTr2HyGUiG3IN5uj1/mlJFE4REUs/jpCw==
+"@seriousme/openapi-schema-validator@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@seriousme/openapi-schema-validator/-/openapi-schema-validator-2.1.0.tgz#e491712ad368ad376d72c8387be0b288aa31ab08"
+  integrity sha512-J461zq7Qj4N/SQlUiyXFelGqtKJenW9DnTjX5fraLk9Lmybq7B6goBieAlMf3D2W+grrVz/hSDodB0faoD9y2Q==
   dependencies:
-    ajv "^8.6.3"
+    ajv "^8.11.0"
     ajv-draft-04 "^1.0.0"
     ajv-formats "^2.1.1"
     js-yaml "^4.1.0"
@@ -1143,7 +1143,7 @@ ajv@^6.10.0, ajv@^6.12.4:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-ajv@^8.0.0, ajv@^8.10.0, ajv@^8.11.0, ajv@^8.6.3:
+ajv@^8.0.0, ajv@^8.10.0, ajv@^8.11.0:
   version "8.11.0"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-8.11.0.tgz#977e91dd96ca669f54a11e23e378e33b884a565f"
   integrity sha512-wGgprdCvMalC0BztXvitD2hC04YffAvtsUn93JbGXYLAtCUO4xd17mCCZQxUOItiBwZvJScWo8NIvQMQ71rdpg==
