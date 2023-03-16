@@ -19,6 +19,10 @@ const typeC = schemaType('MyTypeC',
     b: typeB,
   }));
 
+const typeWithArray = schemaType('TypeWithArray', Type.Object({
+  arr: Type.Array(typeA),
+}));
+
 
 const baseOas: OpenAPIObject = {
   openapi: '3.1.0',
@@ -157,6 +161,22 @@ describe('tagged schema finder', () => {
       ...new Set([...findTaggedSchemas(oas).map(s => s[SCHEMA_NAME_PROPERTY])]),
     ];
     expect(schemaKeys).toHaveLength(3);
+  });
+
+  test('finds tagged schema in arrays', () => {
+    const oas: OpenAPIObject = {
+      ...baseOas,
+      components: {
+        schemas: {
+          'TypeWithArray': typeWithArray,
+        }
+      }
+    };
+
+    const schemaKeys = [
+      ...new Set([...findTaggedSchemas(oas).map(s => s[SCHEMA_NAME_PROPERTY])]),
+    ];
+    expect(schemaKeys).toHaveLength(2);
   });
 
   // TODO: test for callback
