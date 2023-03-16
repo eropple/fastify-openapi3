@@ -31,7 +31,7 @@ function findTaggedSchemasInSchemas(
   //        if they're nested. This isn't the worst thing in the world, because
   //        they get deduplicated later and we are not dealing with large N here,
   //        but it does add time to plugin startup.
-  if (isFalsy(s.type)) {
+  if (isFalsy(s.type) && !s.allOf && !s.anyOf && !s.oneOf) {
     throw new Error(`Schema object has no type: ${JSON.stringify(s)}`);
   }
 

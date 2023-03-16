@@ -7,6 +7,7 @@ import { findTaggedSchemas } from '../src/spec-transforms/find.js';
 import { canonicalizeSchemas } from '../src/spec-transforms/canonicalize';
 import { schemaType } from '../src/schemas.js';
 import { APPLICATION_JSON, SCHEMA_NAME_PROPERTY } from '../src/constants.js';
+import { UnionOneOf } from './typebox-ext.js';
 
 const typeA = schemaType('MyTypeA', Type.Object({}));
 const typeB = schemaType('MyTypeB',
@@ -23,6 +24,10 @@ const typeWithArray = schemaType('TypeWithArray', Type.Object({
   arr: Type.Array(typeA),
 }));
 
+const oneOfType = schemaType('OneOfType', UnionOneOf([
+  Type.Literal('a'),
+  Type.Literal('b'),
+]));
 
 const baseOas: OpenAPIObject = {
   openapi: '3.1.0',
@@ -147,7 +152,7 @@ describe('tagged schema finder', () => {
     expect(findTaggedSchemas(oas)).toHaveLength(2);
   })
 
-  test('finds nested tagged schema', () => {
+  test('finds nested tagged schema in objects', () => {
     const oas: OpenAPIObject = {
       ...baseOas,
       components: {
@@ -163,7 +168,7 @@ describe('tagged schema finder', () => {
     expect(schemaKeys).toHaveLength(3);
   });
 
-  test('finds tagged schema in arrays', () => {
+  test('finds nested tagged schema in arrays', () => {
     const oas: OpenAPIObject = {
       ...baseOas,
       components: {
@@ -177,6 +182,22 @@ describe('tagged schema finder', () => {
       ...new Set([...findTaggedSchemas(oas).map(s => s[SCHEMA_NAME_PROPERTY])]),
     ];
     expect(schemaKeys).toHaveLength(2);
+  });
+
+  test('correctly finds oneOf/anyOf schemas (despite not having types)', () => {
+    const oas: OpenAPIObject = {
+      ...baseOas,
+      components: {
+        schemas: {
+          'OneOfType': oneOfType,
+        }
+      }
+    };
+
+    const schemaKeys = [
+      ...new Set([...findTaggedSchemas(oas).map(s => s[SCHEMA_NAME_PROPERTY])]),
+    ];
+    expect(schemaKeys).toHaveLength(1);
   });
 
   // TODO: test for callback
