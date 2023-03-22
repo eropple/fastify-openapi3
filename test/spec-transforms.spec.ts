@@ -29,6 +29,8 @@ const oneOfType = schemaType('OneOfType', UnionOneOf([
   Type.Literal('b'),
 ]));
 
+const oneOfType2 = schemaType('OneOfType2', UnionOneOf([typeA, typeB, typeC]));
+
 const baseOas: OpenAPIObject = {
   openapi: '3.1.0',
   info: {
@@ -184,7 +186,7 @@ describe('tagged schema finder', () => {
     expect(schemaKeys).toHaveLength(2);
   });
 
-  test('correctly finds oneOf/anyOf schemas (despite not having types)', () => {
+  test('correctly finds oneOf/anyOf schemas (literals)', () => {
     const oas: OpenAPIObject = {
       ...baseOas,
       components: {
@@ -198,6 +200,22 @@ describe('tagged schema finder', () => {
       ...new Set([...findTaggedSchemas(oas).map(s => s[SCHEMA_NAME_PROPERTY])]),
     ];
     expect(schemaKeys).toHaveLength(1);
+  });
+
+  test('correctly finds oneOf/anyOf schemas (multiple schemas)', () => {
+    const oas: OpenAPIObject = {
+      ...baseOas,
+      components: {
+        schemas: {
+          'OneOfType2': oneOfType2,
+        }
+      }
+    };
+
+    const schemaKeys = [
+      ...new Set([...findTaggedSchemas(oas).map(s => s[SCHEMA_NAME_PROPERTY])]),
+    ];
+    expect(schemaKeys).toHaveLength(4);
   });
 
   // TODO: test for callback

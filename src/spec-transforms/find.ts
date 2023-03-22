@@ -38,6 +38,7 @@ function findTaggedSchemasInSchemas(
   const ret = [
     s.allOf ?? [],
     s.anyOf ?? [],
+    s.oneOf ?? [],
     Object.values(s.properties ?? {}),
     s.additionalProperties,
     TypeGuard.TArray(s) && [s.items],
