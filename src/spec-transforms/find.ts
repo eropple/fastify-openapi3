@@ -11,7 +11,7 @@ import {
   ResponsesObject,
   SchemaObject,
 } from "openapi3-ts";
-import { TypeGuard } from "@sinclair/typebox/guard";
+import { TypeGuard } from "@sinclair/typebox";
 import { isFalsy } from "utility-types";
 
 import { APPLICATION_JSON } from "../constants.js";

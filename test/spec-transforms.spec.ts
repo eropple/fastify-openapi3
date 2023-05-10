@@ -1,6 +1,5 @@
 import { OpenAPIObject, OperationObject, SchemaObject } from 'openapi3-ts';
-import { Static, Type } from '@sinclair/typebox';
-import { inspect } from 'util';
+import { Type } from '@sinclair/typebox';
 
 import { canonicalizeAnnotatedSchemas } from '../src/spec-transforms/index.js';
 import { findTaggedSchemas } from '../src/spec-transforms/find.js';

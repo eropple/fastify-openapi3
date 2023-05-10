@@ -26,8 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Kind, TSchema, SchemaOptions, Static } from '@sinclair/typebox'
-import { Custom } from '@sinclair/typebox/custom'
+import { Kind, TSchema, SchemaOptions, Static, TypeRegistry } from '@sinclair/typebox'
 import { Value } from '@sinclair/typebox/value'
 
 function UnionOneOfCheck(schema: UnionOneOf<TSchema[]>, value: unknown) {
@@ -42,6 +41,6 @@ export interface UnionOneOf<T extends TSchema[]> extends TSchema {
 
 /** Creates a Union type with a `oneOf` schema representation */
 export function UnionOneOf<T extends TSchema[]>(oneOf: [...T], options: SchemaOptions = {}) {
-  if (!Custom.Has('UnionOneOf')) Custom.Set('UnionOneOf', UnionOneOfCheck)
+  if (!TypeRegistry.Has('UnionOneOf')) TypeRegistry.Set('UnionOneOf', UnionOneOfCheck)
   return { ...options, [Kind]: 'UnionOneOf', oneOf } as UnionOneOf<T>
 }
