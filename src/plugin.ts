@@ -1,5 +1,5 @@
 import { FastifyPluginAsync, RouteOptions } from "fastify";
-import fp from "fastify-plugin";
+import { fastifyPlugin} from "fastify-plugin";
 import { OpenApiBuilder, OperationObject, PathItemObject } from "openapi3-ts";
 import OpenAPISchemaValidator from "@seriousme/openapi-schema-validator";
 import * as YAML from "js-yaml";
@@ -16,20 +16,9 @@ import { APPLICATION_JSON } from "./constants.js";
 import { rapidocSkeleton } from "./ui/rapidoc.js";
 export { OAS3PluginOptions } from "./options.js";
 
-// export interface RequestGenericInterface {
-//   Body?: RequestBodyDefault;
-//   Querystring?: RequestQuerystringDefault;
-//   Params?: RequestParamsDefault;
-//   Headers?: RequestHeadersDefault;
-// }
-
-// export interface ReplyGenericInterface {
-//   Reply?: ReplyDefault;
-// }
-
 const validator = new OpenAPISchemaValidator();
 
-export const oas3Plugin: FastifyPluginAsync<OAS3PluginOptions> = fp(
+export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
   async (fastify, options) => {
     const pLog = fastify.log.child({ plugin: "OAS3Plugin" });
 

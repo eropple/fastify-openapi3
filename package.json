@@ -24,17 +24,22 @@
   },
   "dependencies": {
     "@seriousme/openapi-schema-validator": "1.7.1",
-    "@sinclair/typebox": "^0.28.9",
     "ajv": "^8.12.0",
     "change-case": "4.1.2",
-    "fastify": "^4.14.1",
-    "fastify-plugin": "^4.5.0",
     "js-yaml": "^4.1.0",
     "openapi-ts": "^0.3.4",
     "openapi3-ts": "^2.0.2",
     "utility-types": "^3.10.0"
   },
+  "peerDependencies": {
+    "fastify": "^4",
+    "fastify-plugin": "^4",
+    "@sinclair/typebox": "^0.29"
+  },
   "devDependencies": {
+    "fastify": "^4",
+    "fastify-plugin": "^4",
+    "@sinclair/typebox": "^0.29",
     "@types/jest": "^29.4.0",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^20.1.2",
