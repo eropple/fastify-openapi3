@@ -1,5 +1,5 @@
 import { FastifyPluginAsync, RouteOptions } from "fastify";
-import { fastifyPlugin} from "fastify-plugin";
+import { fastifyPlugin } from "fastify-plugin";
 import { OpenApiBuilder, OperationObject, PathItemObject } from "openapi3-ts";
 import OpenAPISchemaValidator from "@seriousme/openapi-schema-validator";
 import * as YAML from "js-yaml";
