@@ -26,30 +26,29 @@
     "@seriousme/openapi-schema-validator": "1.7.1",
     "ajv": "^8.12.0",
     "change-case": "4.1.2",
-    "js-yaml": "^4.1.0",
     "fastify-plugin": "^4",
+    "js-yaml": "^4.1.0",
     "openapi-ts": "^0.3.4",
     "openapi3-ts": "^2.0.2",
     "utility-types": "^3.10.0"
   },
   "peerDependencies": {
-    "fastify": "^4",
-    "@sinclair/typebox": "^0.29"
+    "@sinclair/typebox": "^0.32.9",
+    "fastify": "^4"
   },
   "devDependencies": {
-    "fastify": "^4",
-    "@sinclair/typebox": "^0.29",
+    "@sinclair/typebox": "^0.32.9",
     "@types/jest": "^29.4.0",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^20.1.2",
-    "@typescript-eslint/eslint-plugin": "^5.54.1",
-    "@typescript-eslint/parser": "^5.54.1",
+    "@typescript-eslint/eslint-plugin": "^6",
+    "@typescript-eslint/parser": "^6",
     "eslint": "^8.35.0",
+    "fastify": "^4",
     "jest": "^29.5.0",
-    "prettier": "^2.8.4",
+    "prettier": "^3",
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1",
-    "typedoc": "^0.24.7",
-    "typescript": "^5.0.4"
+    "typescript": "^5.3.3"
   }
 }

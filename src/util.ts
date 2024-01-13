@@ -21,7 +21,7 @@ export function isNotPrimitive(item: any): item is Exclude<any, Primitive> {
 
 export function isNotReferenceObject<
   T,
-  U extends T | ReferenceObject = T | ReferenceObject
+  U extends T | ReferenceObject = T | ReferenceObject,
 >(item: U): item is Exclude<U, ReferenceObject> {
   return !isReferenceObject(item);
 }

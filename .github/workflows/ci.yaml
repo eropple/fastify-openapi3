@@ -16,10 +16,10 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: yarn install --frozen-lockfile
-      - run: yarn run build
-      - run: yarn run lint
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint
         if: matrix.os == 'ubuntu-latest'
-      - run: yarn run format:check
+      - run: npm run format:check
         if: matrix.os == 'ubuntu-latest'
-      - run: yarn test
+      - run: npm test

@@ -20,15 +20,14 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: yarn install --frozen-lockfile
-      - run: yarn run build
+      - run: npm ci
+      - run: npm run build
         if: matrix.os == 'ubuntu-latest'
-      - run: yarn run lint
+      - run: npm run lint
         if: matrix.os == 'ubuntu-latest'
-      - run: yarn run format:check
+      - run: npm run format:check
         if: matrix.os == 'ubuntu-latest'
-      - run: yarn test
-
+      - run: npm test
 
   publish-npm:
     needs: build
@@ -51,8 +50,8 @@ jobs:
       - name: Verify that the version exists in package.json
         run: 'sudo apt-get install -y jq && [[ "$(jq -r ".version" package.json)" == "$VERSION" ]]'
 
-      - run: yarn install --frozen-lockfile
-      - run: yarn run build
+      - run: npm ci
+      - run: npm run build
       - run: npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
