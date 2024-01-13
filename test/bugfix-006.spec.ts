@@ -5,6 +5,7 @@ import { Static, Type } from '@sinclair/typebox';
 import { oas3Plugin, OAS3PluginOptions } from '../src/plugin.js';
 import { schemaType } from '../src/schemas.js';
 import { APPLICATION_JSON } from '../src/constants.js';
+import { SchemaObject } from "openapi3-ts";
 
 const pluginOpts: OAS3PluginOptions = {
   openapiInfo: {
@@ -24,6 +25,12 @@ describe('bug 006', () => {
     const fastify = Fastify({ logger: { level: 'error' } });
     await fastify.register(oas3Plugin, { ...pluginOpts });
 
+    const ret = {
+      bar: {
+        foo: 'baz',
+      },
+    };
+
     await fastify.register(async (fastify: FastifyInstance) => {
       fastify.route<{ Reply: TestResponse }>({
         url: '/nested',
@@ -34,13 +41,7 @@ describe('bug 006', () => {
           },
         },
         oas: {},
-        handler: async (req, reply) => {
-          return {
-            bar: {
-              foo: 'baz',
-            },
-          };
-        }
+        handler: () => ret,
       });
     });
     await fastify.ready();
@@ -50,7 +51,18 @@ describe('bug 006', () => {
 
     expect(oas.components?.schemas?.TestResponse).toBeTruthy();
     expect(oas.components?.schemas?.TestResponseInner).toBeTruthy();
+    expect((oas.components?.schemas?.TestResponse as SchemaObject)?.properties?.bar?.$ref)
+      .toEqual('#/components/schemas/TestResponseInner');
     expect(op?.responses?.['200']?.content?.[APPLICATION_JSON]?.schema)
       .toEqual({ $ref: '#/components/schemas/TestResponse' });
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/nested',
+    });
+    const responseBody = response.json();
+
+    expect(response.statusCode).toEqual(200);
+    expect(responseBody).toMatchObject(ret);
   });
 });
