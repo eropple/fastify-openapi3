@@ -41,7 +41,7 @@ function findTaggedSchemasInSchemas(
     s.oneOf ?? [],
     Object.values(s.properties ?? {}),
     s.additionalProperties,
-    TypeGuard.TArray(s) && [s.items],
+    TypeGuard.IsArray(s) && [s.items],
   ]
     .flat()
     .filter(isNotPrimitive)

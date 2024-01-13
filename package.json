@@ -33,11 +33,11 @@
     "utility-types": "^3.10.0"
   },
   "peerDependencies": {
-    "@sinclair/typebox": "<1",
+    "@sinclair/typebox": "^0.32.9",
     "fastify": "^4"
   },
   "devDependencies": {
-    "@sinclair/typebox": "<1",
+    "@sinclair/typebox": "^0.32.9",
     "@types/jest": "^29.4.0",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^20.1.2",
