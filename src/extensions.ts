@@ -7,6 +7,7 @@ import type { OpenAPIObject, SchemaObject } from "openapi3-ts";
 
 import type { TaggedSchema } from "./schemas.js";
 import type { OAS3ResponseTable, OAS3RouteOptions } from "./options.js";
+import { TSchema } from "@sinclair/typebox";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -20,7 +21,10 @@ declare module "fastify" {
   interface RouteOptions {
     oas?: OAS3RouteOptions;
 
-    schema?: FastifySchema & { response?: OAS3ResponseTable<SchemaObject> };
+    schema?: FastifySchema & {
+      body?: TSchema & TaggedSchema;
+      response?: OAS3ResponseTable<TSchema & TaggedSchema>;
+    };
   }
 
   interface RouteShorthandOptions {
