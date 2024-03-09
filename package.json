@@ -1,6 +1,6 @@
 {
   "name": "@eropple/fastify-openapi3",
-  "version": "0.6.0-alpha.1",
+  "version": "0.6.0-alpha.2",
   "author": "Ed Ropple",
   "license": "LGPL-3.0",
   "type": "module",
