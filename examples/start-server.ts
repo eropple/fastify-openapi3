@@ -1,5 +1,4 @@
 import { type Static, Type } from "@sinclair/typebox";
-import Ajv from "ajv";
 import Fastify, {
   type FastifyInstance,
   type FastifyServerOptions,
@@ -22,22 +21,22 @@ const PingResponse = schemaType(
 );
 type PingResponse = Static<typeof PingResponse>;
 
-const coercingValidator = new Ajv({
-  coerceTypes: true,
-});
-const normalValidator = oas3PluginAjv(new Ajv({}));
-
 const pluginOpts: OAS3PluginOptions = {
   openapiInfo: {
     title: "Test Document",
     version: "0.1.0",
   },
   publish: {
-    ui: "rapidoc",
+    ui: "scalar",
+    scalarExtraOptions: {
+      theme: "solarized",
+    },
     json: true,
     yaml: true,
   },
 };
+
+console.log(pluginOpts);
 
 const run = async () => {
   const fastifyOpts: FastifyServerOptions = {

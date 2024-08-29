@@ -1,6 +1,6 @@
 {
   "name": "@eropple/fastify-openapi3",
-  "version": "0.7.0-alpha.1",
+  "version": "0.7.0-alpha.2",
   "author": "Ed Ropple",
   "license": "MIT",
   "type": "module",
@@ -31,6 +31,7 @@
     "utility-types": "^3.11.0"
   },
   "peerDependencies": {
+    "@scalar/fastify-api-reference": "^1.25.7",
     "@sinclair/typebox": ">=0.32.9",
     "ajv": "^8",
     "fastify": "^4"

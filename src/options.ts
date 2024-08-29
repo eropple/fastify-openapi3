@@ -15,13 +15,27 @@ export type OASBuilderFn = (oas: OpenApiBuilder) => void;
 
 export interface OAS3PluginPublishOptions {
   /**
-   * If `'rapidoc'`, serves a Rapidoc UI at `/docs`.
+   * If `'rapidoc'`, serves a Rapidoc UI at `uiPath`.
+   *
+   * If `'scalar'`, serves a Scalar UI at `uiPath`.
    *
    * If `null`, does not serve any explorer UI at all.
    *
-   * Defaults to `'rapidoc'`.
+   * Defaults to `'rapidoc'`. This WILL change in the future.
    */
-  ui?: "rapidoc" | null;
+  ui?: "rapidoc" | "scalar" | null;
+
+  /**
+   * The path for the explorer UI. Defaults to `/docs`.
+   */
+  uiPath?: string;
+
+  /**
+   * Additional options to pass to the Scalar UI. Obviously doesn't
+   * do anything if `ui` is not `'scalar'`.
+   */
+  scalarExtraOptions?: Record<string, any>;
+
   /**
    * Serves a JSON version of your OpenAPI specification. If a string
    * is passed, that will be the path of the JSON file (otherwise, it

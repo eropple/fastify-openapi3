@@ -38,9 +38,15 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
 
     pLog.debug({ options }, "Initializing OAS3 plugin.");
 
-    const operationIdNameFn = options.operationIdNameFn ?? defaultOperationIdFn;
+    const publish: OAS3PluginPublishOptions = options.publish ?? {
+      ui: "rapidoc",
+      json: true,
+      yaml: true,
+    };
 
-    // add our documentation routes here, safely ahead of the
+    const uiPath = publish.uiPath ?? "/docs";
+
+    const operationIdNameFn = options.operationIdNameFn ?? defaultOperationIdFn;
 
     // we append routes to this, rather than doing transforms, to allow
     // other plugins to (potentially) modify them before we do all our filthy
@@ -74,6 +80,11 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
           const rLog = pLog.child({
             route: { url: route.url, method: route.method },
           });
+
+          if (route.url.startsWith(uiPath)) {
+            rLog.debug("Skipping UI route.");
+            continue;
+          }
 
           const oasConvertedUrl = convertFastifyToOpenAPIPath(route.url);
           rLog.info(
@@ -313,12 +324,6 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
       }
     });
 
-    const publish: OAS3PluginPublishOptions = {
-      ui: options.publish?.ui !== undefined ? "rapidoc" : options.publish?.ui,
-      json: options.publish?.json ?? true,
-      yaml: options.publish?.yaml ?? true,
-    };
-
     if (publish.json) {
       const path =
         typeof publish.json === "string" ? publish.json : "openapi.json";
@@ -365,9 +370,10 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
     if (publish.ui) {
       switch (publish.ui) {
         case "rapidoc": {
+          pLog.info("Enabling Rapidoc UI.");
           let rapidocContent: string | null = null;
           fastify.get(
-            "/docs",
+            uiPath,
             {
               oas: { omit: true },
             },
@@ -381,6 +387,20 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
             }
           );
           break;
+        }
+        case "scalar": {
+          pLog.info("Enabling Scalar UI.");
+          const scalar = (await import("@scalar/fastify-api-reference"))
+            .default;
+          await fastify.register(scalar, {
+            routePrefix: uiPath,
+            configuration: {
+              ...(publish.scalarExtraOptions ?? {}),
+              spec: {
+                content: () => fastify.openapiDocument,
+              },
+            },
+          });
         }
       }
     }
