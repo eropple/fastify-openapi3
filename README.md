@@ -24,13 +24,20 @@ Once you've installed it--well, you'd best go do some things to set it up, huh? 
 import Fastify, { FastifyInstance } from 'fastify';
 import { Static, Type } from '@sinclair/typebox';
 
-import OAS3Plugin, { OAS3PluginOptions, schemaType } from '../src/index.js';
+import OAS3Plugin, { OAS3PluginOptions, schemaType, oas3PluginAjv } from '../src/index.js';
 ```
 
 Your imports. (Obviously, in your project, the last import will be from `"@eropple/fastify-openapi3"`.)
 
 ```ts
-const fastify = Fastify({ logger: { level: 'error' } });
+const fastifyOpts: FastifyServerOptions = {
+  logger: { level: 'error' },
+  ajv: {
+    plugins: [oas3PluginAjv],
+  }
+}
+
+const fastify = Fastify(fastifyOpts);
 await fastify.register(OAS3Plugin, { ...pluginOpts });
 ```
 

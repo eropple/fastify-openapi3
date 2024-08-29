@@ -14,6 +14,9 @@ import { canonicalizeAnnotatedSchemas } from "./spec-transforms/index.js";
 import { defaultOperationIdFn } from "./operation-helpers.js";
 import { APPLICATION_JSON } from "./constants.js";
 import { rapidocSkeleton } from "./ui/rapidoc.js";
+import { TypeGuard } from '@sinclair/typebox';
+import { convertFastifyToOpenAPIPath } from './path-converter.js';
+import { findMissingEntries } from './util.js';
 export { OAS3PluginOptions } from "./options.js";
 
 const validator = new OpenAPISchemaValidator();
@@ -65,6 +68,11 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
             route: { url: route.url, method: route.method },
           });
 
+          const oasConvertedUrl = convertFastifyToOpenAPIPath(route.url);
+          rLog.info({ oasUrl: oasConvertedUrl.url }, "Building operation for route.");
+
+
+
           const oas = route.oas;
           if (!oas && options.includeUnconfiguredOperations) {
             rLog.debug("Route has no OAS config; skipping.");
@@ -77,21 +85,117 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
 
           const operation: OperationObject = {
             operationId: oas?.operationId ?? operationIdNameFn(route),
-            summary: oas?.summary,
-            description: oas?.description,
+            summary: oas?.summary ?? route.url,
+            description: oas?.description ?? "No operation description specified.",
             deprecated: oas?.deprecated,
             tags: oas?.tags,
             responses: {},
           };
           // and now do some inference to build our operation object...
           if (route.schema) {
+            rLog.debug("Beginning to build operation object from schema.");
             const { body, params, querystring, response } = route.schema;
 
-            // TODO: handle request body
-            // TODO: handle params
+            if (body || oas?.body) {
+              rLog.debug("Adding request body to operation.");
+              if (!TypeGuard.IsSchema(body)) {
+                rLog.warn("Route has a request body that is not a schema. Skipping.");
+              } else {
+                const oasRequestBody = oas?.body;
+                const requestBodyContentType = oasRequestBody?.contentType ?? APPLICATION_JSON;
+                operation.requestBody = {
+                  description: oas?.body?.description ?? "No request body description specified.",
+                  content: {
+                    [requestBodyContentType]: {
+                      schema: oas?.body?.schemaOverride ?? body,
+                    },
+                  },
+                };
+              }
+            }
+
             // TODO: handle query string
+            if (querystring) {
+              rLog.debug("Adding query string to operation.");
+
+              if (!TypeGuard.IsObject(querystring)) {
+                rLog.warn("Route has a querystring that is not a schema. Skipping.");
+              } else {
+                operation.parameters = operation.parameters ?? [];
+
+                if (querystring.additionalProperties) {
+                  rLog.warn("Route's querystring has additionalProperties. This will be ignored.");
+                }
+
+                const routeQsExtras = route.oas?.querystring ?? {};
+                const qsEntries = Object.entries(querystring.properties ?? {});
+
+                const unmatchedExtras = findMissingEntries(routeQsExtras, qsEntries);
+                if (unmatchedExtras.length > 0) {
+                  rLog.warn({ unmatchedExtras }, `Route's querystring has extra properties. These will be ignored: ${unmatchedExtras.join(", ")}`);
+                }
+
+                for (const [qsKey, qsValue] of qsEntries) {
+                  const qsExtra = routeQsExtras[qsKey] ?? {};
+
+                  operation.parameters.push({
+                    name: qsKey,
+                    in: "query",
+                    deprecated: qsExtra.deprecated,
+                    description: qsExtra.description ?? qsValue.description ?? "No querystring parameter description specified.",
+                    example: qsExtra.example ?? qsValue.example,
+                    required: querystring.required?.includes(qsKey) ?? false,
+                    schema: qsExtra.schemaOverride ?? qsValue,
+                    style: qsExtra.style,
+                    allowEmptyValue: qsExtra.allowEmptyValue,
+                    allowReserved: qsExtra.allowReserved,
+                    explode: qsExtra.explode,
+                  });
+                }
+              }
+            }
+
+            // TODO: handle params
+            if (params) {
+              rLog.debug("Adding params to operation.");
+
+              if (!TypeGuard.IsObject(params)) {
+                rLog.warn("Route has a params that is not a schema. Skipping.");
+              } else {
+                operation.parameters = operation.parameters ?? [];
+
+                if (params.additionalProperties) {
+                  rLog.warn("Route's params has additionalProperties. This will be ignored.");
+                }
+
+                const routeParamsExtras = route.oas?.params ?? {};
+                const paramsEntries = Object.entries(params.properties ?? {});
+
+                const unmatchedExtras = findMissingEntries(routeParamsExtras, paramsEntries);
+                if (unmatchedExtras.length > 0) {
+                  rLog.warn({ unmatchedExtras }, `Route's params has extra properties. These will be ignored: ${unmatchedExtras.join(", ")}`);
+                }
+
+                for (const [paramKey, paramValue] of paramsEntries) {
+                  const paramExtra = routeParamsExtras[paramKey] ?? {};
+
+                  if (!params.required?.includes(paramKey)) {
+                    rLog.warn({ paramKey }, `Route's param is marked as not required. This will be ignored.`);
+                  }
+
+                  operation.parameters.push({
+                    name: paramKey,
+                    in: "path",
+                    description: paramExtra.description ?? paramValue.description ?? "No path parameter description specified.",
+                    example: paramExtra.example ?? paramValue.example,
+                    schema: paramExtra.schemaOverride ?? paramValue,
+                  });
+                }
+              }
+            }
 
             if (response) {
+              // TODO: expand this to use full fastify multi-response-type support, if desired (I don't, PRs welcome)
               for (const responseCode of Object.keys(response)) {
                 if (
                   responseCode !== "default" &&
@@ -103,12 +207,14 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
                   continue;
                 }
 
+                const oasResponses = oas?.responses?.[responseCode];
+                const responseContentType = oasResponses?.contentType ?? APPLICATION_JSON;
                 operation.responses[responseCode] = {
                   description:
-                    oas?.responses?.[responseCode]?.description ??
-                    "No description given.",
+                    oasResponses?.description ??
+                    "No response description specified.",
                   content: {
-                    [APPLICATION_JSON]: { schema: response[responseCode] },
+                    [responseContentType]: { schema: oasResponses?.schemaOverride ?? response[responseCode] },
                   },
                 };
               }
@@ -116,8 +222,9 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
           }
 
           /// ...and now we wedge it into doc.paths
-          const p: PathItemObject = doc.paths[route.url] ?? {};
-          doc.paths[route.url] = p;
+          const oasUrl = oasConvertedUrl.url;
+          const p: PathItemObject = doc.paths[oasUrl] ?? {};
+          doc.paths[oasUrl] = p;
           // TODO: is this right? who actually uses 'all' for API reqs?
           [route.method]
             .flat()
@@ -140,7 +247,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
         if (!result.valid) {
           if (options.exitOnInvalidDocument) {
             pLog.error(
-              { openApiErrors: result.errors },
+              { openApiErrors: result.errors, doc },
               "Errors in OpenAPI validation."
             );
             throw new OAS3SpecValidationError();

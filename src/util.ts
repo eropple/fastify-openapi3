@@ -29,3 +29,12 @@ export function isNotReferenceObject<
 export function isTaggedSchema(t: any): t is SchemaObject & TaggedSchema {
   return isSchemaObject(t) && typeof t[SCHEMA_NAME_PROPERTY] === "symbol";
 }
+
+export function findMissingEntries<T extends object, U extends object>(
+  mainObject: T,
+  comparisonObject: U | null | undefined
+): (keyof T)[] {
+  return Object.keys(mainObject).filter(key =>
+    !(comparisonObject && key in comparisonObject)
+  ) as (keyof T)[];
+}

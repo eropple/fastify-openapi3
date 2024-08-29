@@ -1,10 +1,18 @@
-import Fastify, { FastifyInstance } from 'fastify';
+import Fastify, { FastifyInstance, FastifyServerOptions } from 'fastify';
 import { Static, Type } from '@sinclair/typebox';
+import Ajv from 'ajv';
 
-import OAS3Plugin, { OAS3PluginOptions, schemaType } from '../src/index.js';
+import OAS3Plugin, { oas3PluginAjv, OAS3PluginOptions, schemaType } from '../src/index.js';
 
+const QwopModel = schemaType('QwopRequestBody', Type.Object({ qwop: Type.Number() }));
+type QwopModel = Static<typeof QwopModel>;
 const PingResponse = schemaType('PingResponse', Type.Object({ pong: Type.Boolean() }));
 type PingResponse = Static<typeof PingResponse>;
+
+const coercingValidator = new Ajv({
+  coerceTypes: true,
+});
+const normalValidator = oas3PluginAjv(new Ajv({}));
 
 const pluginOpts: OAS3PluginOptions = {
   openapiInfo: {
@@ -19,7 +27,14 @@ const pluginOpts: OAS3PluginOptions = {
 };
 
 const run = async () => {
-  const fastify = Fastify({ logger: { level: 'error' } });
+  const fastifyOpts: FastifyServerOptions = {
+    logger: { level: 'error' },
+    ajv: {
+      plugins: [oas3PluginAjv],
+    }
+  }
+
+  const fastify = Fastify(fastifyOpts);
   await fastify.register(OAS3Plugin, { ...pluginOpts });
 
   // we do this inside a prefixed scope to smoke out prefix append errors
@@ -43,9 +58,31 @@ const run = async () => {
         return { pong: true };
       }
     });
+
+    fastify.route<{ Body: QwopModel, Reply: PingResponse }>({
+      url: '/qwop',
+      method: 'POST',
+      schema: {
+        querystring: Type.Object({
+          value: Type.Number({ minimum: 0, maximum: 1000 }),
+          verbose: Type.Optional(Type.Boolean()),
+        }),
+        body: QwopModel,
+        response: {
+          201: PingResponse,
+        },
+      },
+      oas: {
+      },
+      handler: async (req, reply) => {
+        return { pong: true };
+      }
+    });
+
   }, { prefix: '/api' });
 
-  const port = Math.floor(Math.random() * 10000) + 10000;
+  // const port = Math.floor(Math.random() * 10000) + 10000;
+  const port = 48484
 
   console.log(`Test server going up at http://localhost:${port}.`);
 
@@ -53,12 +90,9 @@ const run = async () => {
   console.log(`YAML: http://localhost:${port}/openapi.yaml`);
   console.log(`UI:   http://localhost:${port}/docs`);
 
-  fastify.listen(port), (err: any) => {
-    if (err) {
-      fastify.log.error({ err });
-      process.exit(2);
-    }
-  }
+  fastify.listen({
+    port,
+  });
 };
 
 run();

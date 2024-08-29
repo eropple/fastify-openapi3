@@ -1,6 +1,6 @@
 {
   "name": "@eropple/fastify-openapi3",
-  "version": "0.6.0-alpha.2",
+  "version": "0.6.0-alpha.3",
   "author": "Ed Ropple",
   "license": "LGPL-3.0",
   "type": "module",
@@ -24,7 +24,6 @@
   },
   "dependencies": {
     "@seriousme/openapi-schema-validator": "1.7.1",
-    "ajv": "^8.12.0",
     "change-case": "4.1.2",
     "fastify-plugin": "^4",
     "js-yaml": "^4.1.0",
@@ -33,7 +32,8 @@
     "utility-types": "^3.10.0"
   },
   "peerDependencies": {
-    "@sinclair/typebox": "^0.32.9",
+    "@sinclair/typebox": ">=0.32.9",
+    "ajv": "^8",
     "fastify": "^4"
   },
   "devDependencies": {
@@ -43,6 +43,7 @@
     "@types/node": "^20.1.2",
     "@typescript-eslint/eslint-plugin": "^6",
     "@typescript-eslint/parser": "^6",
+    "ajv": "^8.17.1",
     "eslint": "^8.35.0",
     "fastify": "^4",
     "jest": "^29.5.0",

@@ -19,5 +19,3 @@ module.exports = {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
 }
-
-console.log(inspect(module.exports, false, Infinity, false))

@@ -1,11 +1,22 @@
 import '../src/extensions.js';
-import Fastify, { FastifyInstance, FastifyPluginAsync } from 'fastify';
+import Fastify, { FastifyInstance, FastifyPluginAsync, FastifyServerOptions } from 'fastify';
 import { Static, Type } from '@sinclair/typebox';
 
 import { oas3Plugin, OAS3PluginOptions } from '../src/plugin.js';
-import { schemaType } from '../src/schemas.js';
 import { APPLICATION_JSON } from '../src/constants.js';
+import { oas3PluginAjv, schemaType } from "../src/index.js";
+import jsYaml from 'js-yaml';
+import { inspect } from 'util';
 
+const fastifyOpts: FastifyServerOptions = {
+  logger: { level: 'error' },
+  ajv: {
+    customOptions: {
+      coerceTypes: true,
+    },
+    plugins: [oas3PluginAjv],
+  }
+}
 const pluginOpts: OAS3PluginOptions = {
   openapiInfo: {
     title: "test",
@@ -13,12 +24,15 @@ const pluginOpts: OAS3PluginOptions = {
   },
 };
 
+const PingResponse = schemaType('PingResponse', Type.Object({ pong: Type.Boolean() }));
+type PingResponse = Static<typeof PingResponse>;
+
+const QwopModel = schemaType('QwopRequestBody', Type.Object({ qwop: Type.Number() }));
+type QwopModel = Static<typeof QwopModel>;
+
 describe('plugin', () => {
   test('can add a base GET route', async () => {
-    const PingResponse = schemaType('PingResponse', Type.Object({ pong: Type.Boolean() }));
-    type PingResponse = Static<typeof PingResponse>;
-
-    const fastify = Fastify({ logger: { level: 'error' } });
+    const fastify = Fastify(fastifyOpts);
     await fastify.register(oas3Plugin, { ...pluginOpts });
 
     // we do this inside a prefixed scope to smoke out prefix append errors
@@ -50,8 +64,9 @@ describe('plugin', () => {
   });
 
   test('will error on an invalid spec', async () => {
-    const fastify = Fastify({ logger: { level: 'silent' } });
+    const fastify = Fastify({ ...fastifyOpts, logger: { level: 'silent' } });
     await fastify.register(oas3Plugin, {
+      // this WILL cause a failure to sput out logging values.
       ...pluginOpts,
       postParse: (oas) => {
         (oas.rootDoc.openapi as any) = 42;
@@ -65,19 +80,13 @@ describe('plugin', () => {
     } catch (err) { /* this is ok */ }
   });
 
-  test('will serve an OAS json doc', async () => {
-    const PingResponse = schemaType('PingResponse', Type.Object({ pong: Type.Boolean() }));
-    type PingResponse = Static<typeof PingResponse>;
-
-    const fastify = Fastify({ logger: { level: 'error' } });
+  test('will serve an OAS json doc and YAML doc', async () => {
+    const fastify = Fastify(fastifyOpts);
     await fastify.register(oas3Plugin, { ...pluginOpts });
 
     // we do this inside a prefixed scope to smoke out prefix append errors
     await fastify.register(async (fastify: FastifyInstance) => {
-      // TODO: once fastify 4.x hits and type providers are a thing, this should be refactored
-      fastify.route<{ Reply: PingResponse }>({
-        url: '/ping',
-        method: 'GET',
+      fastify.get('/ping', {
         schema: {
           response: {
             200: PingResponse,
@@ -91,13 +100,168 @@ describe('plugin', () => {
     }, { prefix: '/api' });
     await fastify.ready();
 
-    const response = await fastify.inject({
+    const jsonResponse = await fastify.inject({
       method: 'GET',
       path: '/openapi.json',
     });
 
-    const doc = JSON.parse(response.body);
+    const jsonDoc = JSON.parse(jsonResponse.body);
+    expect(jsonDoc).toMatchObject(fastify.openapiDocument);
 
-    expect(doc).toMatchObject(fastify.openapiDocument);
+    const yamlResponse = await fastify.inject({
+      method: 'GET',
+      path: '/openapi.yaml',
+    });
+
+    const yamlDoc = jsYaml.load(yamlResponse.body);
+    expect(yamlDoc).toMatchObject(fastify.openapiDocument);
+  });
+
+  test('correctly represents responses in OAS documents', async () => {
+    const fastify = Fastify(fastifyOpts);
+    await fastify.register(oas3Plugin, { ...pluginOpts });
+
+    await fastify.register(async (fastify: FastifyInstance) => {
+      fastify.get('/ping', {
+        schema: {
+          response: {
+            200: PingResponse,
+          },
+        },
+        oas: {},
+        handler: async (req, reply) => {
+          return { pong: true };
+        }
+      });
+    }, { prefix: '/api' });
+
+    await fastify.ready();
+
+    const jsonResponse = await fastify.inject({
+      method: 'GET',
+      path: '/openapi.json',
+    });
+
+    const jsonDoc = JSON.parse(jsonResponse.body);
+
+    const operation = jsonDoc.paths?.['/api/ping']?.get;
+    const response = operation?.responses?.['200'];
+    expect(response).toMatchObject({ description: "No response description specified.", content: { [APPLICATION_JSON]: { schema: { $ref: '#/components/schemas/PingResponse' } } } });
+
+    const pingResponse = jsonDoc.components?.schemas?.PingResponse;
+
+    expect(pingResponse).toBeDefined();
+    expect(pingResponse).toMatchObject({ type: 'object', properties: { pong: { type: 'boolean' } }, required: ['pong'] });
+  });
+
+  test('correctly represents request bodies in OAS documents', async () => {
+    const fastify = Fastify(fastifyOpts);
+    await fastify.register(oas3Plugin, { ...pluginOpts });
+
+    await fastify.register(async (fastify: FastifyInstance) => {
+      fastify.post('/qwop', {
+        schema: {
+          body: QwopModel,
+          response: {
+            200: PingResponse,
+          },
+        },
+        oas: {},
+        handler: async (req, reply) => {
+          return { pong: true };
+        }
+      });
+    }, { prefix: '/api' });
+    await fastify.ready();
+
+    const jsonResponse = await fastify.inject({
+      method: 'GET',
+      path: '/openapi.json',
+    });
+
+    const jsonDoc = JSON.parse(jsonResponse.body);
+    const operation = jsonDoc.paths?.['/api/qwop']?.post;
+
+    const requestBody = operation?.requestBody;
+    expect(requestBody).toMatchObject({ content: { [APPLICATION_JSON]: { schema: { $ref: '#/components/schemas/QwopRequestBody' } } } });
+
+    const qwopRequestBody = jsonDoc.components?.schemas?.QwopRequestBody;
+    expect(qwopRequestBody).toMatchObject({ type: 'object', properties: { qwop: { type: 'number' } }, required: ['qwop'] });
+  });
+
+  test('correctly represents query parameters in OAS documents', async () => {
+    const fastify = Fastify(fastifyOpts);
+    await fastify.register(oas3Plugin, { ...pluginOpts });
+
+    await fastify.register(async (fastify: FastifyInstance) => {
+      fastify.get('/boop', {
+        schema: {
+          querystring: Type.Object({
+            boopIndex: Type.Number({ description: "Boop index." }),
+            verbose: Type.Optional(Type.Boolean()),
+          }),
+          response: {
+            200: PingResponse,
+          },
+        },
+        oas: {
+          querystring: {
+            verbose: { deprecated: true },
+          }
+        },
+        handler: async (req, reply) => {
+          return { pong: true };
+        }
+      });
+    });
+    await fastify.ready();
+
+    const jsonResponse = await fastify.inject({
+      method: 'GET',
+      path: '/openapi.json',
+    });
+
+    const jsonDoc = JSON.parse(jsonResponse.body);
+    const operation = jsonDoc.paths?.['/boop']?.get;
+
+    const parameters = operation?.parameters;
+    expect(parameters).toMatchObject([{ in: 'query', name: 'boopIndex', description: "Boop index.", schema: { type: 'number' }, required: true }, { in: 'query', name: 'verbose', schema: { type: 'boolean' }, required: false, deprecated: true }]);
+  });
+
+  test('correctly represents path parameters in OAS documents', async () => {
+    const fastify = Fastify(fastifyOpts);
+    await fastify.register(oas3Plugin, { ...pluginOpts });
+
+    await fastify.register(async (fastify: FastifyInstance) => {
+      fastify.get('/clank/:primary/:secondary', {
+        schema: {
+          params: Type.Object({
+            primary: Type.String(),
+            secondary: Type.Number(),
+          }),
+          response: {
+            200: PingResponse,
+          },
+        },
+        oas: {
+        },
+        handler: async (req, reply) => {
+          return { pong: true };
+        }
+      });
+    });
+    await fastify.ready();
+
+    const jsonResponse = await fastify.inject({
+      method: 'GET',
+      path: '/openapi.json',
+    });
+
+    const jsonDoc = JSON.parse(jsonResponse.body);
+    const operation = jsonDoc.paths?.['/clank/{primary}/{secondary}']?.get;
+
+    const parameters = operation?.parameters;
+    // remember: `required` is implied (and forced true) for path params
+    expect(parameters).toMatchObject([{ in: 'path', name: 'primary', schema: { type: 'string' } }, { in: 'path', name: 'secondary', schema: { type: 'number' } }]);
   });
 });

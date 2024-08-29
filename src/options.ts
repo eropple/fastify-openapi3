@@ -5,6 +5,7 @@ import {
   OpenApiBuilder,
   OpenAPIObject,
   OperationObject,
+  ParameterStyle,
 } from "openapi3-ts";
 
 import { OperationIdFn } from "./operation-helpers.js";
@@ -87,7 +88,31 @@ export type OAS3ResponseTable<T> = {
 };
 
 export type OAS3RouteResponseFields = {
-  description: string;
+  description?: string;
+  contentType?: string;
+  schemaOverride?: any;
+};
+
+export type OAS3RequestBodyInfo = {
+  description?: string;
+  contentType?: string;
+  schemaOverride?: any;
+}
+
+export type OAS3QueryParamExtras = {
+  deprecated?: boolean;
+  description?: string;
+  example?: any;
+  allowEmptyValue?: boolean;
+  allowReserved?: boolean;
+  style?: ParameterStyle;
+  explode?: boolean;
+  schemaOverride?: any;
+}
+export type OAS3PathParamExtras = {
+  description?: string;
+  example?: any;
+  schemaOverride?: any;
 };
 
 export interface OAS3RouteOptions {
@@ -108,6 +133,12 @@ export interface OAS3RouteOptions {
    * Any fields set here will be merged into the OpenAPI operation object.
    */
   custom?: Record<string, any>;
+
+
+  body?: OAS3RequestBodyInfo;
+
+  querystring?: Record<string, OAS3QueryParamExtras>;
+  params?: Record<string, OAS3PathParamExtras>;
 
   responses?: OAS3ResponseTable<OAS3RouteResponseFields>;
 }
