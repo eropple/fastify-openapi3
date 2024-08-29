@@ -4,7 +4,7 @@ _Because I just can't stop making OpenAPI libraries, I guess._
 [![NPM version](https://img.shields.io/npm/v/@eropple/fastify-openapi3)](https://www.npmjs.com/package/@eropple/fastify-openapi3) [![CI](https://github.com/eropple/fastify-openapi3/actions/workflows/ci.yaml/badge.svg)](https://github.com/eropple/fastify-openapi3/actions/workflows/ci.yaml)
 
 ## What is it? ##
-This is a library to help you generate [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0)-compliant specs from your [Fastify](https://www.fastify.io/) app. Others exist, but to my mind don't scratch the itch that the best OAS tooling does: making it faster and easier to create correct specs and valid API clients from those specs. Because of my [own](https://github.com/modern-project/modern-ruby) [background](https://github.com/eropple/nestjs-openapi3) in building OpenAPI libraries, and my growing appreciation for Fastify, I decided to take a crack at it.
+This is a library to help you generate [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0)-compliant (or 3.0.3 if you do a little work on your own) specs from your [Fastify](https://www.fastify.io/) app. Others exist, but to my mind don't scratch the itch that the best OAS tooling does: making it faster and easier to create correct specs and valid API clients from those specs. Because of my [own](https://github.com/modern-project/modern-ruby) [background](https://github.com/eropple/nestjs-openapi3) in building OpenAPI libraries, and my growing appreciation for Fastify, I decided to take a crack at it.
 
 This library presupposes that you use [`@sinclair/typebox`](https://github.com/sinclairzx81/typebox) to define the JSON schema used in your requests, and from that JSON Schema derives types. (Ergonomics for non-TypeScript users is specifically out-of-scope.) It will walk all your routes, determine your schema, and extract and deduplicate those schemas to present a relatively clean and easy-to-use OpenAPI document. It'll then also serve JSON and YAML versions of your specification, as well as host an interactive API explorer with try-it-out features courtesy of [Rapidoc](https://mrin9.github.io/RapiDoc/).
 
@@ -15,10 +15,12 @@ This library presupposes that you use [`@sinclair/typebox`](https://github.com/s
 First, install it, etc. etc.:
 
 ```bash
+npm install @eropple/fastify-openapi3
+pnpm add @eropple/fastify-openapi3
 yarn add @eropple/fastify-openapi3
 ```
 
-Once you've installed it--well, you'd best go do some things to set it up, huh? There's a manual test (originally added to smoke out issues with Rapidoc serving) in [`examples/start-server.ts`], which can also be directly invoked from the repository with `yarn demo`. Below are the important bits from that demo:
+Once you've installed it--well, you'd best go do some things to set it up, huh? There's a manual test (originally added to smoke out issues with Rapidoc serving) in [`examples/start-server.ts`], which can also be directly invoked from the repository with `npm run demo`. Below are the important bits from that demo:
 
 ```ts
 import Fastify, { FastifyInstance } from 'fastify';
@@ -80,7 +82,7 @@ And now let's make a route:
 
 You don't have to put yours inside a prefixed route, but I like to, so, well, there you go.
 
-If you do a `yarn demo`, you'll get a UI that looks like the following:
+If you do a `npm run demo`, you'll get a UI that looks like the following:
 
 ![a docs screenshot](https://i.imgur.com/iOPApmq.png)
 
