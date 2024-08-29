@@ -1,11 +1,11 @@
-import '../src/extensions.js';
-import Fastify, { FastifyInstance } from 'fastify';
-import { Static, Type } from '@sinclair/typebox';
+import "../src/extensions.js";
+import { type Static, Type } from "@sinclair/typebox";
+import Fastify, { type FastifyInstance } from "fastify";
+import { type SchemaObject } from "openapi3-ts";
 
-import { oas3Plugin, OAS3PluginOptions } from '../src/plugin.js';
-import { schemaType } from '../src/schemas.js';
-import { APPLICATION_JSON } from '../src/constants.js';
-import { SchemaObject } from "openapi3-ts";
+import { APPLICATION_JSON } from "../src/constants.js";
+import { oas3Plugin, type OAS3PluginOptions } from "../src/plugin.js";
+import { schemaType } from "../src/schemas.js";
 
 const pluginOpts: OAS3PluginOptions = {
   openapiInfo: {
@@ -14,27 +14,33 @@ const pluginOpts: OAS3PluginOptions = {
   },
 };
 
-describe('bug 006', () => {
-  test('supports a response type with a nested object', async () => {
-    const TestResponseInner = schemaType('TestResponseInner', Type.Object({ foo: Type.String() }));
+describe("bug 006", () => {
+  test("supports a response type with a nested object", async () => {
+    const TestResponseInner = schemaType(
+      "TestResponseInner",
+      Type.Object({ foo: Type.String() })
+    );
     type TestResponseInner = Static<typeof TestResponseInner>;
 
-    const TestResponse = schemaType('TestResponse', Type.Object({ bar: TestResponseInner }));
+    const TestResponse = schemaType(
+      "TestResponse",
+      Type.Object({ bar: TestResponseInner })
+    );
     type TestResponse = Static<typeof TestResponse>;
 
-    const fastify = Fastify({ logger: { level: 'error' } });
+    const fastify = Fastify({ logger: { level: "error" } });
     await fastify.register(oas3Plugin, { ...pluginOpts });
 
     const ret = {
       bar: {
-        foo: 'baz',
+        foo: "baz",
       },
     };
 
     await fastify.register(async (fastify: FastifyInstance) => {
       fastify.route<{ Reply: TestResponse }>({
-        url: '/nested',
-        method: 'GET',
+        url: "/nested",
+        method: "GET",
         schema: {
           response: {
             200: TestResponse,
@@ -47,18 +53,21 @@ describe('bug 006', () => {
     await fastify.ready();
 
     const oas = fastify.openapiDocument;
-    const op = oas.paths?.['/nested']?.get;
+    const op = oas.paths?.["/nested"]?.get;
 
     expect(oas.components?.schemas?.TestResponse).toBeTruthy();
     expect(oas.components?.schemas?.TestResponseInner).toBeTruthy();
-    expect((oas.components?.schemas?.TestResponse as SchemaObject)?.properties?.bar?.$ref)
-      .toEqual('#/components/schemas/TestResponseInner');
-    expect(op?.responses?.['200']?.content?.[APPLICATION_JSON]?.schema)
-      .toEqual({ $ref: '#/components/schemas/TestResponse' });
+    expect(
+      (oas.components?.schemas?.TestResponse as SchemaObject)?.properties?.bar
+        ?.$ref
+    ).toEqual("#/components/schemas/TestResponseInner");
+    expect(op?.responses?.["200"]?.content?.[APPLICATION_JSON]?.schema).toEqual(
+      { $ref: "#/components/schemas/TestResponse" }
+    );
 
     const response = await fastify.inject({
-      method: 'GET',
-      url: '/nested',
+      method: "GET",
+      url: "/nested",
     });
     const responseBody = response.json();
 

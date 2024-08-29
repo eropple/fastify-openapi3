@@ -1,7 +1,7 @@
-import { OpenAPIObject } from "openapi3-ts";
-import { SCHEMA_NAME_PROPERTY } from "../constants.js";
+import { type OpenAPIObject } from "openapi3-ts";
 
-import { isNotReferenceObject, isTaggedSchema } from "../util.js";
+import { isTaggedSchema } from "../util.js";
+
 import { canonicalizeSchemas } from "./canonicalize.js";
 import { findTaggedSchemas } from "./find.js";
 import { fixupSpecSchemaRefs } from "./fixup.js";

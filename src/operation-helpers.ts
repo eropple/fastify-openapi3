@@ -1,5 +1,5 @@
 import { camelCase } from "change-case";
-import { RouteOptions } from "fastify";
+import { type RouteOptions } from "fastify";
 
 export type OperationIdFn = (route: RouteOptions) => string;
 
@@ -8,6 +8,7 @@ export type OperationIdFn = (route: RouteOptions) => string;
 export const defaultOperationIdFn: OperationIdFn = (route) =>
   camelCase(
     route.url
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .replace(new RegExp(`^${(route as any).prefix}`), "")
       .replace("/", " ") +
       " " +

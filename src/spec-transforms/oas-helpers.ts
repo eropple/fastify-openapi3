@@ -1,12 +1,12 @@
 import {
-  OpenAPIObject,
-  OperationObject,
-  PathItemObject,
-  ReferenceObject,
-  SchemaObject,
+  type OpenAPIObject,
+  type OperationObject,
+  type PathItemObject,
+  type ReferenceObject,
+  type SchemaObject,
 } from "openapi3-ts";
 
-import { TaggedSchema } from "../schemas.js";
+import { type TaggedSchema } from "../schemas.js";
 import { isNotReferenceObject, isTruthy } from "../util.js";
 
 export type TaggedSchemaObject = SchemaObject & TaggedSchema;

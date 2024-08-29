@@ -1,4 +1,4 @@
-import { OpenAPIObject } from "openapi3-ts";
+import { type OpenAPIObject } from "openapi3-ts";
 
 export function rapidocSkeleton(document: OpenAPIObject): string {
   // this is a _little_ bonkers because we have to avoid accidental backticks.

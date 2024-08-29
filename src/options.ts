@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  CallbacksObject,
-  ExternalDocumentationObject,
-  InfoObject,
-  OpenApiBuilder,
+  type CallbacksObject,
+  type ExternalDocumentationObject,
+  type InfoObject,
+  type OpenApiBuilder,
   OpenAPIObject,
   OperationObject,
-  ParameterStyle,
+  type ParameterStyle,
 } from "openapi3-ts";
 
-import { OperationIdFn } from "./operation-helpers.js";
+import { type OperationIdFn } from "./operation-helpers.js";
 
 export type OASBuilderFn = (oas: OpenApiBuilder) => void;
 
@@ -97,7 +98,7 @@ export type OAS3RequestBodyInfo = {
   description?: string;
   contentType?: string;
   schemaOverride?: any;
-}
+};
 
 export type OAS3QueryParamExtras = {
   deprecated?: boolean;
@@ -108,7 +109,7 @@ export type OAS3QueryParamExtras = {
   style?: ParameterStyle;
   explode?: boolean;
   schemaOverride?: any;
-}
+};
 export type OAS3PathParamExtras = {
   description?: string;
   example?: any;
@@ -133,7 +134,6 @@ export interface OAS3RouteOptions {
    * Any fields set here will be merged into the OpenAPI operation object.
    */
   custom?: Record<string, any>;
-
 
   body?: OAS3RequestBodyInfo;
 

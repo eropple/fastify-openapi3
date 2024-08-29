@@ -1,0 +1,7 @@
+#! /bin/bash
+
+echo "- pre-commit hooks..."
+npx lint-staged
+
+npm run build
+npm run test

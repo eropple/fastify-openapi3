@@ -1,17 +1,17 @@
-import {
-  CallbackObject,
-  CallbacksObject,
-  OpenAPIObject,
-  OperationObject,
-  ParameterObject,
-  PathItemObject,
-  ReferenceObject,
-  RequestBodyObject,
-  ResponseObject,
-  ResponsesObject,
-  SchemaObject,
-} from "openapi3-ts";
 import { TypeGuard } from "@sinclair/typebox";
+import {
+  type CallbackObject,
+  type CallbacksObject,
+  type OpenAPIObject,
+  type OperationObject,
+  type ParameterObject,
+  type PathItemObject,
+  type ReferenceObject,
+  type RequestBodyObject,
+  type ResponseObject,
+  type ResponsesObject,
+  type SchemaObject,
+} from "openapi3-ts";
 import { isFalsy } from "utility-types";
 
 import { APPLICATION_JSON } from "../constants.js";
@@ -21,7 +21,12 @@ import {
   isTaggedSchema,
   isTruthy,
 } from "../util.js";
-import { mapPathItems, operations, TaggedSchemaObject } from "./oas-helpers.js";
+
+import {
+  mapPathItems,
+  operations,
+  type TaggedSchemaObject,
+} from "./oas-helpers.js";
 
 function findTaggedSchemasInSchemas(
   s: SchemaObject

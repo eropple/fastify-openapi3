@@ -1,5 +1,6 @@
 import { SCHEMA_NAME_PROPERTY } from "../constants.js";
-import { TaggedSchemaObject } from "./oas-helpers.js";
+
+import { type TaggedSchemaObject } from "./oas-helpers.js";
 
 /**
  * Recursive function to untangle all these schemas.

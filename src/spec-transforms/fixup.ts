@@ -1,17 +1,22 @@
 import {
-  CallbackObject,
+  type CallbackObject,
   isSchemaObject,
-  OpenAPIObject,
-  PathItemObject,
-  ReferenceObject,
-  ResponseObject,
-  SchemaObject,
+  type OpenAPIObject,
+  type PathItemObject,
+  type ReferenceObject,
+  type ResponseObject,
+  type SchemaObject,
 } from "openapi3-ts";
 
 import { APPLICATION_JSON, SCHEMA_NAME_PROPERTY } from "../constants.js";
-import { TaggedSchema } from "../schemas.js";
+import { type TaggedSchema } from "../schemas.js";
 import { isNotReferenceObject, isTaggedSchema } from "../util.js";
-import { mapPathItems, MaybeSchemaHolder, operations } from "./oas-helpers.js";
+
+import {
+  mapPathItems,
+  type MaybeSchemaHolder,
+  operations,
+} from "./oas-helpers.js";
 
 function refFromTaggedSchema(s: TaggedSchema): ReferenceObject {
   return {

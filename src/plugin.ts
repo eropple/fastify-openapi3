@@ -1,22 +1,29 @@
-import { FastifyPluginAsync, RouteOptions } from "fastify";
-import { fastifyPlugin } from "fastify-plugin";
-import { OpenApiBuilder, OperationObject, PathItemObject } from "openapi3-ts";
 import OpenAPISchemaValidator from "@seriousme/openapi-schema-validator";
+import { TypeGuard } from "@sinclair/typebox";
+import { type RouteOptions } from "fastify";
+import { fastifyPlugin } from "fastify-plugin";
 import * as YAML from "js-yaml";
+import {
+  OpenApiBuilder,
+  type OperationObject,
+  type PathItemObject,
+} from "openapi3-ts";
+
+import "./extensions.js";
+import { APPLICATION_JSON } from "./constants.js";
+import { OAS3PluginOptionsError, OAS3SpecValidationError } from "./errors.js";
+import { defaultOperationIdFn } from "./operation-helpers.js";
+import {
+  type OAS3PluginOptions,
+  type OAS3PluginPublishOptions,
+} from "./options.js";
+import { convertFastifyToOpenAPIPath } from "./path-converter.js";
+import { canonicalizeAnnotatedSchemas } from "./spec-transforms/index.js";
+import { rapidocSkeleton } from "./ui/rapidoc.js";
+import { findMissingEntries } from "./util.js";
 
 // TODO: switch this to openapi-types; it's slightly more rigorous, but has some gremlins
 export * as OAS31 from "openapi3-ts";
-
-import "./extensions.js";
-import { OAS3PluginOptions, OAS3PluginPublishOptions } from "./options.js";
-import { OAS3PluginOptionsError, OAS3SpecValidationError } from "./errors.js";
-import { canonicalizeAnnotatedSchemas } from "./spec-transforms/index.js";
-import { defaultOperationIdFn } from "./operation-helpers.js";
-import { APPLICATION_JSON } from "./constants.js";
-import { rapidocSkeleton } from "./ui/rapidoc.js";
-import { TypeGuard } from '@sinclair/typebox';
-import { convertFastifyToOpenAPIPath } from './path-converter.js';
-import { findMissingEntries } from './util.js';
 export { OAS3PluginOptions } from "./options.js";
 
 const validator = new OpenAPISchemaValidator();
@@ -69,9 +76,10 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
           });
 
           const oasConvertedUrl = convertFastifyToOpenAPIPath(route.url);
-          rLog.info({ oasUrl: oasConvertedUrl.url }, "Building operation for route.");
-
-
+          rLog.info(
+            { oasUrl: oasConvertedUrl.url },
+            "Building operation for route."
+          );
 
           const oas = route.oas;
           if (!oas && options.includeUnconfiguredOperations) {
@@ -86,7 +94,8 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
           const operation: OperationObject = {
             operationId: oas?.operationId ?? operationIdNameFn(route),
             summary: oas?.summary ?? route.url,
-            description: oas?.description ?? "No operation description specified.",
+            description:
+              oas?.description ?? "No operation description specified.",
             deprecated: oas?.deprecated,
             tags: oas?.tags,
             responses: {},
@@ -99,12 +108,17 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
             if (body || oas?.body) {
               rLog.debug("Adding request body to operation.");
               if (!TypeGuard.IsSchema(body)) {
-                rLog.warn("Route has a request body that is not a schema. Skipping.");
+                rLog.warn(
+                  "Route has a request body that is not a schema. Skipping."
+                );
               } else {
                 const oasRequestBody = oas?.body;
-                const requestBodyContentType = oasRequestBody?.contentType ?? APPLICATION_JSON;
+                const requestBodyContentType =
+                  oasRequestBody?.contentType ?? APPLICATION_JSON;
                 operation.requestBody = {
-                  description: oas?.body?.description ?? "No request body description specified.",
+                  description:
+                    oas?.body?.description ??
+                    "No request body description specified.",
                   content: {
                     [requestBodyContentType]: {
                       schema: oas?.body?.schemaOverride ?? body,
@@ -119,20 +133,30 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
               rLog.debug("Adding query string to operation.");
 
               if (!TypeGuard.IsObject(querystring)) {
-                rLog.warn("Route has a querystring that is not a schema. Skipping.");
+                rLog.warn(
+                  "Route has a querystring that is not a schema. Skipping."
+                );
               } else {
                 operation.parameters = operation.parameters ?? [];
 
                 if (querystring.additionalProperties) {
-                  rLog.warn("Route's querystring has additionalProperties. This will be ignored.");
+                  rLog.warn(
+                    "Route's querystring has additionalProperties. This will be ignored."
+                  );
                 }
 
                 const routeQsExtras = route.oas?.querystring ?? {};
                 const qsEntries = Object.entries(querystring.properties ?? {});
 
-                const unmatchedExtras = findMissingEntries(routeQsExtras, qsEntries);
+                const unmatchedExtras = findMissingEntries(
+                  routeQsExtras,
+                  qsEntries
+                );
                 if (unmatchedExtras.length > 0) {
-                  rLog.warn({ unmatchedExtras }, `Route's querystring has extra properties. These will be ignored: ${unmatchedExtras.join(", ")}`);
+                  rLog.warn(
+                    { unmatchedExtras },
+                    `Route's querystring has extra properties. These will be ignored: ${unmatchedExtras.join(", ")}`
+                  );
                 }
 
                 for (const [qsKey, qsValue] of qsEntries) {
@@ -142,7 +166,10 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
                     name: qsKey,
                     in: "query",
                     deprecated: qsExtra.deprecated,
-                    description: qsExtra.description ?? qsValue.description ?? "No querystring parameter description specified.",
+                    description:
+                      qsExtra.description ??
+                      qsValue.description ??
+                      "No querystring parameter description specified.",
                     example: qsExtra.example ?? qsValue.example,
                     required: querystring.required?.includes(qsKey) ?? false,
                     schema: qsExtra.schemaOverride ?? qsValue,
@@ -165,28 +192,42 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
                 operation.parameters = operation.parameters ?? [];
 
                 if (params.additionalProperties) {
-                  rLog.warn("Route's params has additionalProperties. This will be ignored.");
+                  rLog.warn(
+                    "Route's params has additionalProperties. This will be ignored."
+                  );
                 }
 
                 const routeParamsExtras = route.oas?.params ?? {};
                 const paramsEntries = Object.entries(params.properties ?? {});
 
-                const unmatchedExtras = findMissingEntries(routeParamsExtras, paramsEntries);
+                const unmatchedExtras = findMissingEntries(
+                  routeParamsExtras,
+                  paramsEntries
+                );
                 if (unmatchedExtras.length > 0) {
-                  rLog.warn({ unmatchedExtras }, `Route's params has extra properties. These will be ignored: ${unmatchedExtras.join(", ")}`);
+                  rLog.warn(
+                    { unmatchedExtras },
+                    `Route's params has extra properties. These will be ignored: ${unmatchedExtras.join(", ")}`
+                  );
                 }
 
                 for (const [paramKey, paramValue] of paramsEntries) {
                   const paramExtra = routeParamsExtras[paramKey] ?? {};
 
                   if (!params.required?.includes(paramKey)) {
-                    rLog.warn({ paramKey }, `Route's param is marked as not required. This will be ignored.`);
+                    rLog.warn(
+                      { paramKey },
+                      `Route's param is marked as not required. This will be ignored.`
+                    );
                   }
 
                   operation.parameters.push({
                     name: paramKey,
                     in: "path",
-                    description: paramExtra.description ?? paramValue.description ?? "No path parameter description specified.",
+                    description:
+                      paramExtra.description ??
+                      paramValue.description ??
+                      "No path parameter description specified.",
                     example: paramExtra.example ?? paramValue.example,
                     schema: paramExtra.schemaOverride ?? paramValue,
                   });
@@ -208,13 +249,17 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
                 }
 
                 const oasResponses = oas?.responses?.[responseCode];
-                const responseContentType = oasResponses?.contentType ?? APPLICATION_JSON;
+                const responseContentType =
+                  oasResponses?.contentType ?? APPLICATION_JSON;
                 operation.responses[responseCode] = {
                   description:
                     oasResponses?.description ??
                     "No response description specified.",
                   content: {
-                    [responseContentType]: { schema: oasResponses?.schemaOverride ?? response[responseCode] },
+                    [responseContentType]: {
+                      schema:
+                        oasResponses?.schemaOverride ?? response[responseCode],
+                    },
                   },
                 };
               }
@@ -260,6 +305,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
         }
 
         pLog.debug("Assigning completed OAS document to FastifyInstance.");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (fastify as any).openapiDocument = doc;
       } catch (err) {
         pLog.error({ err }, "Error during plugin instantiation.");
@@ -318,7 +364,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
 
     if (publish.ui) {
       switch (publish.ui) {
-        case "rapidoc":
+        case "rapidoc": {
           let rapidocContent: string | null = null;
           fastify.get(
             "/docs",
@@ -335,6 +381,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
             }
           );
           break;
+        }
       }
     }
   },
