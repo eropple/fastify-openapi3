@@ -48,14 +48,6 @@ how we can make writing them pleasant.
 Some example objects are free with the way that schemas work, but responses, etc.
 need some thought.
 
-## Moving to Fastify v4 and Type Providers ##
-**Expected difficulty:** unknown, probably low/moderate
-
-`@eroppple/fastify-openapi3` is written against Fastify v3, because that's what
-is current as of the time of this writing. v4 reduces a lot of boilerplate in a
-way that's compatible with this library, though, and it's probably the first big
-stop.
-
 ## Header Response Schema ##
 **Expected difficulty:** development low, design moderate/hard
 
