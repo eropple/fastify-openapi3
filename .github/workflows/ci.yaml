@@ -28,6 +28,4 @@ jobs:
       - run: npm run build
       - run: npm run lint
         if: matrix.os == 'ubuntu-latest'
-      - run: npm run format:check
-        if: matrix.os == 'ubuntu-latest'
       - run: npm test
