@@ -239,6 +239,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
                       paramExtra.description ??
                       paramValue.description ??
                       "No path parameter description specified.",
+                    required: true,
                     example: paramExtra.example ?? paramValue.example,
                     schema: paramExtra.schemaOverride ?? paramValue,
                   });

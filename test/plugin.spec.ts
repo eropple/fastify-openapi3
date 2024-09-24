@@ -323,8 +323,18 @@ describe("plugin", () => {
     const parameters = operation?.parameters;
     // remember: `required` is implied (and forced true) for path params
     expect(parameters).toMatchObject([
-      { in: "path", name: "primary", schema: { type: "string" } },
-      { in: "path", name: "secondary", schema: { type: "number" } },
+      {
+        in: "path",
+        name: "primary",
+        schema: { type: "string" },
+        required: true,
+      },
+      {
+        in: "path",
+        name: "secondary",
+        schema: { type: "number" },
+        required: true,
+      },
     ]);
   });
 });
