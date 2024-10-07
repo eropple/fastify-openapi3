@@ -4,12 +4,13 @@ import {
   type OperationObject,
   type SchemaObject,
 } from "openapi3-ts";
+import { describe, expect, test } from "vitest";
 
-import { APPLICATION_JSON, SCHEMA_NAME_PROPERTY } from "../src/constants.js";
-import { schemaType } from "../src/schemas.js";
-import { canonicalizeSchemas } from "../src/spec-transforms/canonicalize.js";
-import { findTaggedSchemas } from "../src/spec-transforms/find.js";
-import { canonicalizeAnnotatedSchemas } from "../src/spec-transforms/index.js";
+import { APPLICATION_JSON, SCHEMA_NAME_PROPERTY } from "../constants.js";
+import { schemaType } from "../schemas.js";
+import { canonicalizeSchemas } from "../spec-transforms/canonicalize.js";
+import { findTaggedSchemas } from "../spec-transforms/find.js";
+import { canonicalizeAnnotatedSchemas } from "../spec-transforms/index.js";
 
 import { UnionOneOf } from "./typebox-ext.js";
 

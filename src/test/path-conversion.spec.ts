@@ -1,4 +1,6 @@
-import { convertFastifyToOpenAPIPath } from "../src/path-converter.js"; // Assume the function is in this file
+import { describe, expect, test } from "vitest";
+
+import { convertFastifyToOpenAPIPath } from "../path-converter.js"; // Assume the function is in this file
 
 describe("convertFastifyToOpenAPIPath", () => {
   // Test simple static paths

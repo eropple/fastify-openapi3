@@ -1,11 +1,12 @@
-import "../src/extensions.js";
+import "../extensions.js";
 import { type Static, Type } from "@sinclair/typebox";
 import Fastify, { type FastifyInstance } from "fastify";
 import { type SchemaObject } from "openapi3-ts";
+import { describe, expect, test } from "vitest";
 
-import { APPLICATION_JSON } from "../src/constants.js";
-import { oas3Plugin, type OAS3PluginOptions } from "../src/plugin.js";
-import { schemaType } from "../src/schemas.js";
+import { APPLICATION_JSON } from "../constants.js";
+import { oas3Plugin, type OAS3PluginOptions } from "../plugin.js";
+import { schemaType } from "../schemas.js";
 
 const pluginOpts: OAS3PluginOptions = {
   openapiInfo: {

@@ -1,4 +1,4 @@
-import "../src/extensions.js";
+import "../extensions.js";
 
 import { type Static, Type } from "@sinclair/typebox";
 import Fastify, {
@@ -6,10 +6,11 @@ import Fastify, {
   type FastifyServerOptions,
 } from "fastify";
 import jsYaml from "js-yaml";
+import { describe, expect, test } from "vitest";
 
-import { APPLICATION_JSON } from "../src/constants.js";
-import { oas3PluginAjv, schemaType } from "../src/index.js";
-import { oas3Plugin, type OAS3PluginOptions } from "../src/plugin.js";
+import { APPLICATION_JSON } from "../constants.js";
+import { oas3PluginAjv, schemaType } from "../index.js";
+import { oas3Plugin, type OAS3PluginOptions } from "../plugin.js";
 
 const fastifyOpts: FastifyServerOptions = {
   logger: { level: "error" },

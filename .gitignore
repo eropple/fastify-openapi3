@@ -2,6 +2,7 @@ node_modules/
 dist/
 build/
 tmp/
+coverage/
 
 *.tmp
 *.tsbuildinfo
