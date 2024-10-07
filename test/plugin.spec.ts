@@ -235,6 +235,64 @@ describe("plugin", () => {
     });
   });
 
+  test("fires postPathItemBuild on each route", async () => {
+    const fastify = Fastify(fastifyOpts);
+    const routeDetails: Set<string> = new Set();
+
+    await fastify.register(oas3Plugin, {
+      ...pluginOpts,
+      postPathItemBuild: (route, pathItem) => {
+        routeDetails.add(route.url);
+      },
+    });
+
+    await fastify.register(async (fastify: FastifyInstance) => {
+      fastify.get("/boop", {
+        schema: {
+          querystring: Type.Object({
+            boopIndex: Type.Number({ description: "Boop index." }),
+            verbose: Type.Optional(Type.Boolean()),
+          }),
+          response: {
+            200: PingResponse,
+          },
+        },
+        oas: {
+          querystring: {
+            verbose: { deprecated: true },
+          },
+        },
+        handler: async (req, reply) => {
+          return { pong: true };
+        },
+      });
+
+      fastify.get("/boop2", {
+        schema: {
+          querystring: Type.Object({
+            boopIndex: Type.Number({ description: "Boop index." }),
+            verbose: Type.Optional(Type.Boolean()),
+          }),
+          response: {
+            200: PingResponse,
+          },
+        },
+        oas: {
+          querystring: {
+            verbose: { deprecated: true },
+          },
+        },
+        handler: async (req, reply) => {
+          return { pong: true };
+        },
+      });
+    });
+
+    await fastify.ready();
+
+    expect(routeDetails).toEqual(new Set(["/boop", "/boop2"]));
+  });
+
   test("correctly represents query parameters in OAS documents", async () => {
     const fastify = Fastify(fastifyOpts);
     await fastify.register(oas3Plugin, { ...pluginOpts });

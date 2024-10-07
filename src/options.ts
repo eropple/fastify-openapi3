@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { type RouteOptions } from "fastify";
 import {
   type CallbacksObject,
   type ExternalDocumentationObject,
@@ -7,11 +8,16 @@ import {
   OpenAPIObject,
   OperationObject,
   type ParameterStyle,
+  type PathItemObject,
 } from "openapi3-ts";
 
 import { type OperationIdFn } from "./operation-helpers.js";
 
 export type OASBuilderFn = (oas: OpenApiBuilder) => void;
+export type PathItemFn = (
+  route: RouteOptions,
+  pathItem: PathItemObject
+) => void;
 
 export interface OAS3PluginPublishOptions {
   /**
@@ -71,6 +77,11 @@ export interface OAS3PluginOptions {
    * Invoked during plugin construction, before any routes are walked.
    */
   preParse?: OASBuilderFn;
+
+  /**
+   * Invoked after a route has been turned into a pathItem.
+   */
+  postPathItemBuild?: PathItemFn;
 
   /**
    * Invoked just before server startup, when all routes have been established.
