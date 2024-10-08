@@ -11,6 +11,10 @@ import {
   type PathItemObject,
 } from "openapi3-ts";
 
+import {
+  type OAS3RouteSecuritySchemeSpec,
+  type OAS3AutowireSecurityOptions,
+} from "./autowired-security/index.js";
 import { type OperationIdFn } from "./operation-helpers.js";
 
 export type OASBuilderFn = (oas: OpenApiBuilder) => void;
@@ -89,6 +93,15 @@ export interface OAS3PluginOptions {
   postParse?: OASBuilderFn;
 
   /**
+   * Controls automatically wiring up security schemes to `onRequest` hooks for
+   * routes that specify `securityScheme`s.
+   *
+   * If this is unset, NO wireup will be done. You can still assign `securityScheme`s
+   * to routes, but you'll need to hande security scheme implementation yourself.
+   */
+  autowiredSecurity?: OAS3AutowireSecurityOptions;
+
+  /**
    * Determines how the OpenAPI specification will be parsed and specified for
    * this package.
    */
@@ -151,7 +164,14 @@ export interface OAS3RouteOptions {
   callbacks?: CallbacksObject;
 
   /**
+   * The set of OAS securitySchemes to use for this route.
+   * **NOTE:** security schemes **will** still be processed when `omit: true`.
+   */
+  security?: OAS3RouteSecuritySchemeSpec | Array<OAS3RouteSecuritySchemeSpec>;
+
+  /**
    * If true, no data about this route will be collated for the OpenAPI document.
+   * **NOTE:** security schemes **will** still be processed!
    */
   omit?: boolean;
 

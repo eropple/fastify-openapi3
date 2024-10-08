@@ -2,19 +2,28 @@ import "fastify";
 import "openapi3-ts";
 import "@sinclair/typebox";
 
-import { FastifySchema } from "fastify";
-import type { OpenAPIObject, SchemaObject } from "openapi3-ts";
+import { type TSchema } from "@sinclair/typebox";
+import { type FastifySchema } from "fastify";
+import type { OpenAPIObject } from "openapi3-ts";
 
-import type { TaggedSchema } from "./schemas.js";
+import { type HandlerRetval } from "./autowired-security/types/handlers.js";
 import type { OAS3ResponseTable, OAS3RouteOptions } from "./options.js";
-import { TSchema } from "@sinclair/typebox";
+import type { TaggedSchema } from "./schemas.js";
+
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+
+export type OAS3SecurityEvaluation = {
+  result: HandlerRetval;
+};
 
 declare module "fastify" {
   interface FastifyInstance {
     readonly openapiDocument: Readonly<OpenAPIObject>;
   }
 
-  interface FastifyRequest {}
+  interface FastifyRequest {
+    oasSecurity?: OAS3SecurityEvaluation;
+  }
 
   interface FastifyReply {}
 

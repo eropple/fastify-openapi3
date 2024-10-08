@@ -9,3 +9,5 @@ export type * as OAS31 from "./oas31-types.js";
 export { schemaType, TaggedSchema } from "./schemas.js";
 
 export * from "./ajv.js";
+
+export * from "./autowired-security/index.js";

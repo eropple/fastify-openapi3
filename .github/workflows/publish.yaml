@@ -19,10 +19,10 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm ci
-      - run: npm run build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
         if: matrix.os == 'ubuntu-latest'
-      - run: npm run lint
+      - run: pnpm test
         if: matrix.os == 'ubuntu-latest'
       - run: npm test
 
@@ -47,8 +47,8 @@ jobs:
       - name: Verify that the version exists in package.json
         run: 'sudo apt-get install -y jq && [[ "$(jq -r ".version" package.json)" == "$VERSION" ]]'
 
-      - run: npm ci
-      - run: npm run build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
       - run: npm publish --access=public
         env:
           NODE_AUTH_TOKEN: "${{secrets.NPM_AUTH_TOKEN}}"

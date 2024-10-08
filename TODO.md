@@ -3,12 +3,6 @@ There are a lot of smaller TODOs throughout the codebase. Here's a brief list of
 larger considerations that, due to a lack of need, haven't yet been handled.
 Feel free to jump in.
 
-## Rapidoc Customization ##
-**Expected difficulty:** very low
-
-Right now, Rapidoc is super hard-coded. We can expose parameters, etc. to allow
-for theming, branding, etc. of the shipped version of Rapidoc.
-
 ## Integration with Fastify v4 Type Providers ##
 **Expected difficulty:** moderate
 
@@ -17,14 +11,6 @@ a generic fashion, specify validators for request bodies, responses, etc. that
 also act as inferrable generics. I have not yet looked at v4, but we do internally
 use `@sinclair/typebox` for everything and so I don't foresee this being a huge
 lift--just somewhat tedious to get right.
-
-## Security Schemes as Middleware ##
-**Expected difficulty:** moderate
-
-You can define security schemes in your OpenAPI documents that indicate how a
-request will be validated for access. It would be cool if you could then register
-to the OAS3 plugin the logic that will be performed for endpoints that have a
-given security scheme.
 
 ## Top-Level `Servers` Block ##
 **Expected difficulty:** low

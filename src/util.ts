@@ -46,3 +46,29 @@ export function findMissingEntries<T extends object, U extends object>(
     (key) => !(comparisonObject && key in comparisonObject)
   ) as (keyof T)[];
 }
+
+export function decodeBasicAuthHeader(
+  header: string
+): { username: string; password: string } | null {
+  if (!header.startsWith("Basic ")) {
+    return null;
+  }
+
+  // Extract the base64 part
+  const base64Credentials = header.slice(6); // Remove 'Basic ' from the string
+
+  // Decode the base64 string
+  const decodedCredentials = Buffer.from(base64Credentials, "base64").toString(
+    "utf-8"
+  );
+
+  // Split the decoded string into username and password
+  const [username, password] = decodedCredentials.split(":");
+
+  // Ensure both username and password exist
+  if (!username || !password) {
+    return null;
+  }
+
+  return { username, password };
+}

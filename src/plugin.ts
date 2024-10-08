@@ -1,6 +1,7 @@
 import OpenAPISchemaValidator from "@seriousme/openapi-schema-validator";
 import { TypeGuard } from "@sinclair/typebox";
 import { type RouteOptions } from "fastify";
+import { type onRequestMetaHookHandler } from "fastify/types/hooks.js";
 import { fastifyPlugin } from "fastify-plugin";
 import * as YAML from "js-yaml";
 import {
@@ -10,6 +11,10 @@ import {
 } from "openapi3-ts";
 
 import "./extensions.js";
+import {
+  attachSecuritySchemesToDocument,
+  attachSecurityToRoute,
+} from "./autowired-security/index.js";
 import { APPLICATION_JSON } from "./constants.js";
 import { OAS3PluginOptionsError, OAS3SpecValidationError } from "./errors.js";
 import { defaultOperationIdFn } from "./operation-helpers.js";
@@ -46,6 +51,14 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
 
     const uiPath = publish.uiPath ?? "/docs";
 
+    const isSkippablePath = (path: string) => {
+      return (
+        path.startsWith(uiPath) ||
+        path === "/openapi.json" ||
+        path === "/openapi.yaml"
+      );
+    };
+
     const operationIdNameFn = options.operationIdNameFn ?? defaultOperationIdFn;
 
     // we append routes to this, rather than doing transforms, to allow
@@ -53,8 +66,29 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
     // object-munging business during `onReady`.
     const routes: Array<RouteOptions> = [];
     fastify.addHook("onRoute", async (route) => {
+      const hookCache: Record<string, onRequestMetaHookHandler> = {};
+
+      const rLog = pLog.child({
+        route: { url: route.url, method: route.method },
+      });
+
+      if (isSkippablePath(route.url)) {
+        rLog.debug("Skipping OpenAPI route.");
+        return;
+      }
+
       if (route?.oas?.omit !== true) {
         routes.push(route);
+      }
+
+      if (options.autowiredSecurity && !options.autowiredSecurity.disabled) {
+        rLog.debug("Attaching security to route.");
+        attachSecurityToRoute(
+          rLog,
+          route,
+          options.autowiredSecurity,
+          hookCache
+        );
       }
     });
 
@@ -82,7 +116,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
             route: { url: route.url, method: route.method },
           });
 
-          if (route.url.startsWith(uiPath)) {
+          if (isSkippablePath(route.url)) {
             rLog.debug("Skipping UI route.");
             continue;
           }
@@ -300,8 +334,20 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
 
         // and now let's normalize out all our schema, hold onto your butts
         doc = await canonicalizeAnnotatedSchemas(doc);
+        doc.components = doc.components ?? {};
+        doc.components.securitySchemes = doc.components.securitySchemes ?? {};
 
-        builder = new OpenApiBuilder(doc);
+        builder = OpenApiBuilder.create(doc);
+
+        // we need to attach our security schemes to the doc
+        if (options.autowiredSecurity && !options.autowiredSecurity.disabled) {
+          attachSecuritySchemesToDocument(
+            pLog,
+            builder,
+            options.autowiredSecurity
+          );
+        }
+
         // and some wrap-up before we consider the builder-y bits done
         if (options.postParse) {
           pLog.debug("Calling postParse.");
@@ -404,7 +450,9 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
           const scalar = (await import("@scalar/fastify-api-reference"))
             .default;
           await fastify.register(scalar, {
-            routePrefix: uiPath,
+            // TODO:  tighten this up
+            //        later versions of typescript have made this more specific
+            routePrefix: uiPath as `/${string}`,
             configuration: {
               ...(publish.scalarExtraOptions ?? {}),
               spec: {
