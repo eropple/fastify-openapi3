@@ -24,6 +24,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - name: install pnpm
+        run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm test
