@@ -39,14 +39,19 @@ function fixupSchemaHolder(s: MaybeSchemaHolder): void {
 function fixupReferencesInSchema(s: SchemaObject) {
   if (s.allOf) {
     s.allOf = s.allOf.map((s2) => {
-      isSchemaObject(s2) && fixupReferencesInSchema(s2);
+      if (isSchemaObject(s2)) {
+        fixupReferencesInSchema(s2);
+      }
+
       return isTaggedSchema(s2) ? refFromTaggedSchema(s2) : s2;
     });
   }
 
   if (s.anyOf) {
     s.anyOf = s.anyOf.map((s2) => {
-      isSchemaObject(s2) && fixupReferencesInSchema(s2);
+      if (isSchemaObject(s2)) {
+        fixupReferencesInSchema(s2);
+      }
       return isTaggedSchema(s2) ? refFromTaggedSchema(s2) : s2;
     });
   }
@@ -73,7 +78,9 @@ function fixupReferencesInSchema(s: SchemaObject) {
   if (s.properties) {
     for (const propKey in s.properties) {
       const s2 = s.properties[propKey];
-      isSchemaObject(s2) && fixupReferencesInSchema(s2);
+      if (isSchemaObject(s2)) {
+        fixupReferencesInSchema(s2);
+      }
       s.properties[propKey] = isTaggedSchema(s2) ? refFromTaggedSchema(s2) : s2;
     }
   }

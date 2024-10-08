@@ -1,4 +1,4 @@
-import { CustomOptions, TSchema } from "@sinclair/typebox";
+import { type CustomOptions, type TSchema } from "@sinclair/typebox";
 import { pascalCase } from "change-case";
 
 import { SCHEMA_NAME_PROPERTY } from "./constants.js";
@@ -35,6 +35,5 @@ export function schemaType<T extends TSchema & CustomOptions>(
   name: string,
   type: T
 ): T & TaggedSchema {
-  // @ts-ignore
   return { ...type, [SCHEMA_NAME_PROPERTY]: Symbol(pascalCase(name)) };
 }

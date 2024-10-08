@@ -4,18 +4,18 @@ module.exports = {
 
   semi: true,
   singleQuote: false,
-  quoteProps: 'consistent',
+  quoteProps: "consistent",
 
-  trailingComma: 'es5',
+  trailingComma: "es5",
   bracketSpacing: true,
 
-  arrowParens: 'always',
+  arrowParens: "always",
 
   requirePragma: false,
   insertPragma: false,
 
-  proseWrap: 'preserve',
-  embeddedLanguageFormatting: 'off',
+  proseWrap: "preserve",
+  embeddedLanguageFormatting: "off",
 
-  endOfLine: 'lf',
+  endOfLine: "lf",
 };

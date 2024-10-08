@@ -3,7 +3,9 @@ type ConversionResult = {
   paramPatterns: Record<string, string>;
 };
 
-export function convertFastifyToOpenAPIPath(fastifyPath: string): ConversionResult {
+export function convertFastifyToOpenAPIPath(
+  fastifyPath: string
+): ConversionResult {
   let url = fastifyPath;
   const paramPatterns: Record<string, string> = {};
 
