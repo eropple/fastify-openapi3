@@ -53,6 +53,11 @@ export function buildSecurityHookHandler(
         );
         if (!options.allowUnrecognizedSecurity) {
           throw new OAS3PluginError(`Security scheme "${name}" not defined.`);
+        } else {
+          rLog.warn(
+            "Ignoring unrecognized security scheme; it is on you to implement it."
+          );
+          continue;
         }
       }
 

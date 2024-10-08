@@ -71,6 +71,128 @@ describe("autowired security", () => {
     });
   });
 
+  describe("configuration checks", () => {
+    test("does not yell at unrecognized schemes if disabled", async () => {
+      const fastify = Fastify(fastifyOpts);
+      await fastify.register(oas3Plugin, {
+        ...pluginOpts,
+        autowiredSecurity: {
+          ...autowiredOpts,
+          disabled: true,
+        },
+      });
+
+      fastify.get(
+        "/boop",
+        {
+          oas: {
+            security: {
+              ANonsenseItem: [],
+            },
+          },
+        },
+        async (request, reply) => {
+          return "hi";
+        }
+      );
+
+      expect(async () => fastify.ready()).not.toThrow();
+    });
+
+    test("allows unrecognized schemes when configured to", async () => {
+      const fastify = Fastify(fastifyOpts);
+      await fastify.register(oas3Plugin, {
+        ...pluginOpts,
+        autowiredSecurity: {
+          ...autowiredOpts,
+          disabled: false,
+          allowUnrecognizedSecurity: true,
+        },
+      });
+
+      fastify.get(
+        "/boop",
+        {
+          oas: {
+            security: {
+              ANonsenseItem: [],
+            },
+          },
+        },
+        async (request, reply) => {
+          return "hi";
+        }
+      );
+
+      expect(async () => fastify.ready()).not.toThrow();
+    });
+
+    // TODO:  fix test
+    //        this fails because it throws in onRoute, which blows up the server (good!)
+    //        but can't be caught in the test (bad!)
+    //   test("by default, requires a route-level security if no root security", async () => {
+    //     const fastify = Fastify(fastifyOpts);
+    //     await fastify.register(oas3Plugin, {
+    //       ...pluginOpts,
+    //       autowiredSecurity: {
+    //         ...autowiredOpts,
+    //       },
+    //     });
+
+    //     try {
+    //       fastify.get(
+    //         "/boop",
+    //         {
+    //           schema: {
+    //             response: {
+    //               200: Type.Object({}),
+    //             },
+    //           },
+    //           oas: {},
+    //         },
+    //         async (request, reply) => {
+    //           return "hi";
+    //         }
+    //       );
+
+    //       throw new Error("onRoute failed to throw");
+    //     } catch (err) {
+    //       expect(err).toBeInstanceOf(Error);
+    //       expect((err as Error).message).toContain(
+    //         "has no security defined, and rootSecurity is not defined"
+    //       );
+    //     }
+    //   });
+
+    test("allows no route-level handlers when root security is not set when options permits", async () => {
+      const fastify = Fastify(fastifyOpts);
+      await fastify.register(oas3Plugin, {
+        ...pluginOpts,
+        autowiredSecurity: {
+          ...autowiredOpts,
+          allowEmptySecurityWithNoRoot: true,
+        },
+      });
+
+      fastify.get(
+        "/boop",
+        {
+          schema: {
+            response: {
+              200: Type.Object({}),
+            },
+          },
+          oas: {},
+        },
+        async (request, reply) => {
+          return "hi";
+        }
+      );
+
+      expect(async () => fastify.ready()).not.toThrow();
+    });
+  });
+
   describe("autowired handlers", () => {
     describe("API key handlers", () => {
       test("empty security allows anything", async () => {
