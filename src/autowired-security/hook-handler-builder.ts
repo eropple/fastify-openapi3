@@ -98,9 +98,9 @@ const defaultFailHandler: OAS3AutowireRequestFailedHandler = (
   request,
   reply
 ) => {
-  if (result.reason === "UNAUTHORIZED") {
+  if (result.code === 401) {
     reply.code(401).send({ error: "Unauthorized" });
-  } else if (result.reason === "FORBIDDEN") {
+  } else if (result.code === 403) {
     reply.code(403).send({ error: "Forbidden" });
   } else {
     request.log.error(
@@ -189,11 +189,11 @@ function buildSecurityHandlerFunction(
     } else {
       request.log.debug("All security handlers failed for route.");
       const isForbidden = andRetvals.some(
-        (r) => r.ok === false && r.reason === "FORBIDDEN"
+        (r) => r.ok === false && r.code === 403
       );
 
       return failHandler(
-        { ok: false, reason: isForbidden ? "FORBIDDEN" : "UNAUTHORIZED" },
+        { ok: false, code: isForbidden ? 403 : 401 },
         request,
         reply
       );

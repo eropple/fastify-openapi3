@@ -8,9 +8,11 @@ import {
   type BasicAuthSecurityScheme,
 } from "./security-schemes.js";
 
-export type HandlerRetval =
-  | { ok: true }
-  | { ok: false; reason: "UNAUTHORIZED" | "FORBIDDEN" };
+export type HandlerRetval = { ok: true } | { ok: false; code: 401 | 403 };
+export const HandlerRetvalReason = Object.freeze({
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+});
 
 export type WrappedHandler = (
   request: FastifyRequest
@@ -42,13 +44,13 @@ export function buildApiKeyHandler(
           const header = Array.isArray(headers) ? headers[0] : headers;
 
           if (!header) {
-            return { ok: false, reason: "UNAUTHORIZED" };
+            return { ok: false, code: 401 };
           }
 
           return scheme.fn(header, request);
         } catch (err) {
           request.log.warn({ err }, "Uncaught error in API key handler.");
-          return { ok: false, reason: "UNAUTHORIZED" };
+          return { ok: false, code: 401 };
         }
       };
     default:
@@ -66,13 +68,13 @@ export function buildHttpBasicHandler(
 
       const credentials = decodeBasicAuthHeader(header);
       if (!credentials) {
-        return { ok: false, reason: "UNAUTHORIZED" };
+        return { ok: false, code: 401 };
       }
 
       return scheme.fn(credentials, request);
     } catch (err) {
       request.log.warn({ err }, "Uncaught error in HTTP basic auth handler.");
-      return { ok: false, reason: "UNAUTHORIZED" };
+      return { ok: false, code: 401 };
     }
   };
 }
@@ -87,7 +89,7 @@ export function buildHttpBearerHandler(
 
       // Check if the Authorization header starts with 'Bearer '
       if (!header.startsWith("Bearer ")) {
-        return { ok: false, reason: "UNAUTHORIZED" };
+        return { ok: false, code: 401 };
       }
 
       // Strip off 'Bearer ' and get the token
@@ -97,7 +99,7 @@ export function buildHttpBearerHandler(
       return scheme.fn(token, request);
     } catch (err) {
       request.log.warn({ err }, "Uncaught error in HTTP bearer handler.");
-      return { ok: false, reason: "UNAUTHORIZED" };
+      return { ok: false, code: 401 };
     }
   };
 }

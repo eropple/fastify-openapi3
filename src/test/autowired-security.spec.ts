@@ -253,7 +253,7 @@ describe("autowired security", () => {
                 fn: (header, request) => {
                   return header === "test"
                     ? { ok: true }
-                    : { ok: false, reason: "UNAUTHORIZED" };
+                    : { ok: false, code: 401 };
                 },
               },
             },
@@ -315,7 +315,7 @@ describe("autowired security", () => {
                   return credentials.username === "test" &&
                     credentials.password === "pwd"
                     ? { ok: true }
-                    : { ok: false, reason: "UNAUTHORIZED" };
+                    : { ok: false, code: 401 };
                 },
               },
             },
@@ -381,7 +381,7 @@ describe("autowired security", () => {
               fn: (token, request) => {
                 return token === "test"
                   ? { ok: true }
-                  : { ok: false, reason: "UNAUTHORIZED" };
+                  : { ok: false, code: 401 };
               },
             },
           },
@@ -443,9 +443,7 @@ describe("autowired security", () => {
             in: "header",
             name: "X-Test-Key",
             fn: (key, request) => {
-              return key === "test"
-                ? { ok: true }
-                : { ok: false, reason: "UNAUTHORIZED" };
+              return key === "test" ? { ok: true } : { ok: false, code: 401 };
             },
           },
           MySecondKey: {
@@ -453,9 +451,7 @@ describe("autowired security", () => {
             in: "header",
             name: "X-Test-Second-Key",
             fn: (key, request) => {
-              return key === "test"
-                ? { ok: true }
-                : { ok: false, reason: "UNAUTHORIZED" };
+              return key === "test" ? { ok: true } : { ok: false, code: 401 };
             },
           },
         },
@@ -524,9 +520,7 @@ describe("autowired security", () => {
             in: "header",
             name: "X-Test-Key",
             fn: (key, request) => {
-              return key === "test"
-                ? { ok: true }
-                : { ok: false, reason: "UNAUTHORIZED" };
+              return key === "test" ? { ok: true } : { ok: false, code: 401 };
             },
           },
           MySecondKey: {
@@ -534,9 +528,7 @@ describe("autowired security", () => {
             in: "header",
             name: "X-Test-Second-Key",
             fn: (key, request) => {
-              return key === "test2"
-                ? { ok: true }
-                : { ok: false, reason: "UNAUTHORIZED" };
+              return key === "test2" ? { ok: true } : { ok: false, code: 401 };
             },
           },
         },
@@ -632,9 +624,7 @@ describe("autowired security", () => {
             in: "header",
             name: "X-Test-Key",
             fn: (key, request) => {
-              return key === "test"
-                ? { ok: true }
-                : { ok: false, reason: "UNAUTHORIZED" };
+              return key === "test" ? { ok: true } : { ok: false, code: 401 };
             },
           },
         },
@@ -682,9 +672,7 @@ describe("autowired security", () => {
             in: "header",
             name: "X-Test-Key",
             fn: (key, request) => {
-              return key === "test"
-                ? { ok: true }
-                : { ok: false, reason: "UNAUTHORIZED" };
+              return key === "test" ? { ok: true } : { ok: false, code: 401 };
             },
           },
           MySecondKey: {
@@ -692,9 +680,7 @@ describe("autowired security", () => {
             in: "header",
             name: "X-Test-Second-Key",
             fn: (key, request) => {
-              return key === "test2"
-                ? { ok: true }
-                : { ok: false, reason: "UNAUTHORIZED" };
+              return key === "test2" ? { ok: true } : { ok: false, code: 401 };
             },
           },
         },
