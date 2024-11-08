@@ -125,6 +125,56 @@ describe("autowired security", () => {
       );
 
       expect(async () => fastify.ready()).not.toThrow();
+
+      const jsonDoc = JSON.parse(
+        (
+          await fastify.inject({
+            method: "GET",
+            path: "/openapi.json",
+          })
+        ).body
+      );
+
+      expect(jsonDoc.paths["/boop"].get.security).toMatchObject([
+        { ANonsenseItem: [] },
+      ]);
+    });
+
+    test("includes security clauses even when autowired is off", async () => {
+      const fastify = Fastify(fastifyOpts);
+      await fastify.register(oas3Plugin, {
+        ...pluginOpts,
+        autowiredSecurity: undefined,
+      });
+
+      fastify.get(
+        "/boop",
+        {
+          oas: {
+            security: {
+              ANonsenseItem: [],
+            },
+          },
+        },
+        async (request, reply) => {
+          return "hi";
+        }
+      );
+
+      expect(async () => fastify.ready()).not.toThrow();
+
+      const jsonDoc = JSON.parse(
+        (
+          await fastify.inject({
+            method: "GET",
+            path: "/openapi.json",
+          })
+        ).body
+      );
+
+      expect(jsonDoc.paths["/boop"].get.security).toMatchObject([
+        { ANonsenseItem: [] },
+      ]);
     });
 
     // TODO:  fix test
@@ -280,6 +330,27 @@ describe("autowired security", () => {
         );
 
         await fastify.ready();
+
+        const jsonDoc = JSON.parse(
+          (
+            await fastify.inject({
+              method: "GET",
+              path: "/openapi.json",
+            })
+          ).body
+        );
+
+        expect(jsonDoc.components.securitySchemes).toMatchObject({
+          MyApiKey: {
+            type: "apiKey",
+            in: "header",
+            name: "X-My-Key",
+          },
+        });
+        expect(jsonDoc.paths["/boop"].get.security).toMatchObject([
+          { MyApiKey: [] },
+        ]);
+
         const response = await fastify.inject({
           method: "GET",
           path: "/boop",

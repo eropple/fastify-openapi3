@@ -6,6 +6,7 @@ import { fastifyPlugin } from "fastify-plugin";
 import * as YAML from "js-yaml";
 import {
   OpenApiBuilder,
+  type SecurityRequirementObject,
   type OperationObject,
   type PathItemObject,
 } from "openapi3-ts";
@@ -146,6 +147,18 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
             tags: oas?.tags,
             responses: {},
           };
+
+          if (oas?.security) {
+            const securities: Array<SecurityRequirementObject> = [];
+            if (Array.isArray(oas.security)) {
+              securities.push(...oas.security);
+            } else {
+              securities.push(oas.security);
+            }
+
+            operation.security = securities;
+          }
+
           // and now do some inference to build our operation object...
           if (route.schema) {
             rLog.debug("Beginning to build operation object from schema.");
@@ -174,7 +187,6 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
               }
             }
 
-            // TODO: handle query string
             if (querystring) {
               rLog.debug("Adding query string to operation.");
 
