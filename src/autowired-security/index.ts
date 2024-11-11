@@ -96,49 +96,44 @@ export function attachSecurityToRoute(
   }
 
   const routeSecurity = route.oas?.security;
-  if (!routeSecurity) {
-    rLog.debug("No route securing; falling back to root security.");
 
-    if (!options.rootSecurity && !options.allowEmptySecurityWithNoRoot) {
+  // If security is explicitly set to empty array, skip all security
+  if (Array.isArray(routeSecurity) && routeSecurity.length === 0) {
+    rLog.debug("Route security explicitly disabled; skipping.");
+    return;
+  }
+
+  // Use route security if defined, otherwise fall back to root security
+  let security = routeSecurity ?? options.rootSecurity;
+
+  // If no security defined at either level
+  if (!security) {
+    if (!options.allowEmptySecurityWithNoRoot) {
       throw new OAS3PluginError(
         `Route ${route.method} ${route.url} has no security defined, and rootSecurity is not defined. If this is intentional, set \`allowEmptySecurityWithNoRoot\` to true.`
       );
-    } else {
-      rLog.debug("No root security or route security; skipping.");
-      return;
     }
+    rLog.debug("No security defined at any level; skipping.");
+    return;
   }
 
-  let security:
-    | OAS3RouteSecuritySchemeSpec
-    | Array<OAS3RouteSecuritySchemeSpec> =
-    routeSecurity ?? options.rootSecurity ?? [];
-
+  // Normalize to array format
   if (!Array.isArray(security)) {
     security = [security];
   }
 
-  if (security.length === 0) {
-    rLog.debug("`security` defined but empty; no hook to add.");
-    return;
-  }
-
-  // now that we have a set of security objects, we need to convert them to a function
-  // that can be used in the `onRequest` handler for the route.
-  //
+  // Create and cache the hook handler
   const cacheKey = JSON.stringify(security);
-
   let hookHandler = hookCache[cacheKey];
   if (!hookHandler) {
     hookHandler = buildSecurityHookHandler(rLog, security, options);
     hookCache[cacheKey] = hookHandler;
   }
 
+  // Add the security hook
   const existingRouteRequestHooks = route.onRequest;
   const newRouteRequestHooks: Array<onRequestMetaHookHandler> = [hookHandler];
   if (Array.isArray(existingRouteRequestHooks)) {
-    // we shouldn't be double-hitting, but just in case, let's make sure
-    // we only run the security handler once.
     newRouteRequestHooks.push(
       ...existingRouteRequestHooks.filter((f) => f !== hookHandler)
     );

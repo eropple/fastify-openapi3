@@ -97,11 +97,20 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
     fastify.addHook("onReady", async () => {
       try {
         pLog.debug("OAS3 onReady hit.");
+        let documentSecurity: SecurityRequirementObject[] | undefined;
+        if (options.autowiredSecurity?.rootSecurity) {
+          documentSecurity = Array.isArray(
+            options.autowiredSecurity.rootSecurity
+          )
+            ? options.autowiredSecurity.rootSecurity
+            : [options.autowiredSecurity.rootSecurity];
+        }
 
         let builder = new OpenApiBuilder({
           openapi: "3.1.0",
           info: options.openapiInfo,
           paths: {},
+          security: documentSecurity,
         });
 
         // handy place for stuff like security schemas and the like
@@ -137,7 +146,6 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
           if (oas?.omit) {
             rLog.debug("Route has omit = true; skipping.");
           }
-
           const operation: OperationObject = {
             operationId: oas?.operationId ?? operationIdNameFn(route),
             summary: oas?.summary ?? route.url,
@@ -148,14 +156,11 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
             responses: {},
           };
 
-          if (oas?.security) {
-            const securities: Array<SecurityRequirementObject> = [];
-            if (Array.isArray(oas.security)) {
-              securities.push(...oas.security);
-            } else {
-              securities.push(oas.security);
-            }
-
+          // Only add security to operation when explicitly set (including empty array to disable)
+          if (oas?.security !== undefined) {
+            const securities = Array.isArray(oas.security)
+              ? oas.security
+              : [oas.security];
             operation.security = securities;
           }
 
