@@ -242,7 +242,7 @@ describe("plugin", () => {
 
     await fastify.register(oas3Plugin, {
       ...pluginOpts,
-      postPathItemBuild: (route, pathItem) => {
+      postOperationBuild: (route, pathItem) => {
         routeDetails.add(route.url);
       },
     });

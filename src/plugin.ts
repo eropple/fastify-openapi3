@@ -329,18 +329,13 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
             }
           }
 
+          if (options.postOperationBuild) {
+            options.postOperationBuild(route, operation);
+          }
+
           /// ...and now we wedge it into doc.paths
           const oasUrl = oasConvertedUrl.url;
           const p: PathItemObject = doc.paths[oasUrl] ?? {};
-
-          const postBuildDebounceKey = route.method + ":" + route.url;
-          if (
-            options.postPathItemBuild &&
-            !postBuildDebounce[postBuildDebounceKey]
-          ) {
-            options.postPathItemBuild(route, p);
-            postBuildDebounce[postBuildDebounceKey] = true;
-          }
 
           doc.paths[oasUrl] = p;
           // TODO: is this right? who actually uses 'all' for API reqs?

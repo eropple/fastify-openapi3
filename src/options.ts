@@ -5,8 +5,7 @@ import {
   type ExternalDocumentationObject,
   type InfoObject,
   type OpenApiBuilder,
-  OpenAPIObject,
-  OperationObject,
+  type OperationObject,
   type ParameterStyle,
   type PathItemObject,
 } from "openapi3-ts";
@@ -18,10 +17,7 @@ import {
 import { type OperationIdFn } from "./operation-helpers.js";
 
 export type OASBuilderFn = (oas: OpenApiBuilder) => void;
-export type PathItemFn = (
-  route: RouteOptions,
-  pathItem: PathItemObject
-) => void;
+export type PathItemFn = (pathItem: PathItemObject) => void;
 
 export interface OAS3PluginPublishOptions {
   /**
@@ -64,6 +60,11 @@ export interface OAS3PluginPublishOptions {
   yaml?: boolean | string;
 }
 
+export type OperationBuildFn = (
+  route: RouteOptions,
+  operation: OperationObject
+) => void;
+
 export interface OAS3PluginOptions {
   /**
    * The base OpenAPI document information. Will be added verbatim
@@ -83,14 +84,16 @@ export interface OAS3PluginOptions {
   preParse?: OASBuilderFn;
 
   /**
-   * Invoked after a route has been turned into a pathItem.
-   */
-  postPathItemBuild?: PathItemFn;
-
-  /**
    * Invoked just before server startup, when all routes have been established.
    */
   postParse?: OASBuilderFn;
+
+  /**
+   * Invoked after an operation has been built but before
+   * it is added to the OAS document. Typebox schemas should
+   * still be object forms here, not `$ref`s.
+   */
+  postOperationBuild?: OperationBuildFn;
 
   /**
    * Controls automatically wiring up security schemes to `onRequest` hooks for
