@@ -476,5 +476,5 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
       }
     }
   },
-  "4.x"
+  "5.x"
 );

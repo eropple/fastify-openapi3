@@ -24,7 +24,7 @@
   "dependencies": {
     "@seriousme/openapi-schema-validator": "1.7.1",
     "change-case": "^4.1.2",
-    "fastify-plugin": "^4",
+    "fastify-plugin": "^5",
     "js-yaml": "^4.1.0",
     "openapi-ts": "^0.3.4",
     "openapi3-ts": "^2.0.2",
@@ -34,7 +34,7 @@
     "@scalar/fastify-api-reference": "^1.25.7",
     "@sinclair/typebox": ">=0.32.9",
     "ajv": "^8",
-    "fastify": "^4"
+    "fastify": "^5"
   },
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
@@ -49,7 +49,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-prettier": "^5.2.1",
-    "fastify": "^4",
+    "fastify": "^5",
     "globals": "^15.10.0",
     "husky": "^9.1.5",
     "lint-staged": "^15.2.9",
