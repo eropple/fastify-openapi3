@@ -1,5 +1,8 @@
 import "../extensions.js";
 
+import { inspect } from "util";
+
+import { fastifyFormbody } from "@fastify/formbody";
 import { type Static, Type } from "@sinclair/typebox";
 import Fastify, {
   type FastifyInstance,
@@ -234,6 +237,94 @@ describe("plugin", () => {
       properties: { qwop: { type: "number" } },
       required: ["qwop"],
     });
+  });
+
+  test("correctly represents request bodies with custom content type in OAS documents", async () => {
+    const fastify = Fastify(fastifyOpts);
+    await fastify.register(oas3Plugin, { ...pluginOpts });
+
+    await fastify.register(
+      async (fastify: FastifyInstance) => {
+        fastify.post("/qwop", {
+          schema: {
+            body: QwopModel,
+            response: {
+              200: PingResponse,
+            },
+          },
+          oas: {
+            body: {
+              contentType: "application/x-www-form-urlencoded",
+            },
+          },
+          handler: async (req, reply) => {
+            return { pong: true };
+          },
+        });
+      },
+      { prefix: "/api" }
+    );
+    await fastify.ready();
+
+    const jsonResponse = await fastify.inject({
+      method: "GET",
+      path: "/openapi.json",
+    });
+
+    const jsonDoc = JSON.parse(jsonResponse.body);
+    console.error(inspect(jsonDoc, { depth: null }));
+    const operation = jsonDoc.paths?.["/api/qwop"]?.post;
+
+    const requestBody = operation?.requestBody;
+    expect(requestBody).toMatchObject({
+      content: {
+        "application/x-www-form-urlencoded": {
+          schema: { $ref: "#/components/schemas/QwopRequestBody" },
+        },
+      },
+    });
+  });
+
+  test("handles form-encoded request bodies correctly (testing non-JSON request bodies)", async () => {
+    const fastify = Fastify(fastifyOpts);
+    await fastify.register(oas3Plugin, { ...pluginOpts });
+
+    await fastify.register(
+      async (fastify: FastifyInstance) => {
+        fastify.register(fastifyFormbody);
+        fastify.post("/qwop", {
+          schema: {
+            body: QwopModel,
+            response: {
+              200: PingResponse,
+            },
+          },
+          oas: {
+            body: {
+              contentType: "application/x-www-form-urlencoded",
+            },
+          },
+          handler: async (req, reply) => {
+            const body = req.body as QwopModel;
+            return { pong: body.qwop === 42 };
+          },
+        });
+      },
+      { prefix: "/api" }
+    );
+    await fastify.ready();
+
+    const response = await fastify.inject({
+      method: "POST",
+      path: "/api/qwop",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      payload: "qwop=42",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.body)).toEqual({ pong: true });
   });
 
   test("fires postPathItemBuild on each route", async () => {

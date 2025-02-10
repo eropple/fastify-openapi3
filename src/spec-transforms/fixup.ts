@@ -93,9 +93,11 @@ function fixupPathItems(p: PathItemObject) {
     oper?.parameters?.filter(isNotReferenceObject)?.forEach(fixupSchemaHolder);
 
     if (oper.requestBody && isNotReferenceObject(oper.requestBody)) {
-      const rb = oper.requestBody.content?.[APPLICATION_JSON];
-      if (rb) {
-        fixupSchemaHolder(rb);
+      const content = oper.requestBody.content ?? {};
+      for (const [_mediaType, responseContent] of Object.entries(content)) {
+        if (responseContent) {
+          fixupSchemaHolder(responseContent);
+        }
       }
     }
 
@@ -105,9 +107,14 @@ function fixupPathItems(p: PathItemObject) {
         .map((k) => r[k] as ResponseObject | ReferenceObject)
         .filter(isNotReferenceObject)
         .forEach((resp) => {
-          const rpC = resp?.content?.[APPLICATION_JSON];
-          if (rpC) {
-            fixupSchemaHolder(rpC);
+          const content = resp?.content ?? {};
+
+          for (const [_mediaType, responseContent] of Object.entries(
+            content ?? {}
+          )) {
+            if (responseContent) {
+              fixupSchemaHolder(responseContent);
+            }
           }
         });
     }

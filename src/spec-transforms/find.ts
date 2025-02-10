@@ -62,11 +62,17 @@ function findTaggedSchemasInSchemas(
 function findTaggedSchemasInResponse(
   r: ResponseObject
 ): Array<TaggedSchemaObject> {
-  return [r]
-    .map((resp) => resp?.content?.[APPLICATION_JSON])
-    .filter(isTruthy)
-    .map((con) => con.schema)
-    .filter(isTaggedSchema);
+  const ret: Array<TaggedSchemaObject> = [];
+
+  const content = r?.content ?? {};
+
+  for (const [_mediaType, responseContent] of Object.entries(content)) {
+    if (responseContent.schema && isTaggedSchema(responseContent.schema)) {
+      ret.push(responseContent.schema);
+    }
+  }
+
+  return ret;
 }
 
 function findTaggedSchemasInResponses(
@@ -95,13 +101,17 @@ function findTaggedSchemasInCallbacks(
 function findTaggedSchemasInRequestBody(
   rb: RequestBodyObject
 ): Array<TaggedSchemaObject> {
-  const bodySchema = rb.content[APPLICATION_JSON]?.schema;
+  const ret: Array<TaggedSchemaObject> = [];
 
-  if (bodySchema && isTaggedSchema(bodySchema)) {
-    return [bodySchema];
+  for (const [k, v] of Object.entries(rb.content ?? {})) {
+    const bodySchema = v.schema;
+
+    if (bodySchema && isTaggedSchema(bodySchema)) {
+      ret.push(bodySchema);
+    }
   }
 
-  return [];
+  return ret;
 }
 
 function findTaggedSchemasInParameter(
