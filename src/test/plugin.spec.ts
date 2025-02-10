@@ -191,6 +191,77 @@ describe("plugin", () => {
     });
   });
 
+  test("correctly represents non-JSON responses in OAS documents", async () => {
+    const fastify = Fastify(fastifyOpts);
+    await fastify.register(oas3Plugin, { ...pluginOpts });
+
+    await fastify.register(
+      async (fastify: FastifyInstance) => {
+        fastify.get("/ping", {
+          schema: {
+            response: {
+              200: PingResponse,
+            },
+          },
+          oas: {
+            responses: {
+              200: {
+                description: "No response description specified.",
+                contentType: "application/x-www-form-urlencoded",
+              },
+            },
+          },
+          handler: async (req, reply) => {
+            reply.header("Content-Type", "application/x-www-form-urlencoded");
+            return "pong=true";
+          },
+        });
+      },
+      { prefix: "/api" }
+    );
+
+    await fastify.ready();
+
+    const jsonResponse = await fastify.inject({
+      method: "GET",
+      path: "/openapi.json",
+    });
+
+    const jsonDoc = JSON.parse(jsonResponse.body);
+
+    const operation = jsonDoc.paths?.["/api/ping"]?.get;
+    const response = operation?.responses?.["200"];
+    expect(response).toMatchObject({
+      description: "No response description specified.",
+      content: {
+        "application/x-www-form-urlencoded": {
+          schema: { $ref: "#/components/schemas/PingResponse" },
+        },
+      },
+    });
+
+    const pingResponse = jsonDoc.components?.schemas?.PingResponse;
+
+    expect(pingResponse).toBeDefined();
+    expect(pingResponse).toMatchObject({
+      type: "object",
+      properties: { pong: { type: "boolean" } },
+      required: ["pong"],
+    });
+
+    // and now inject the request
+
+    const response2 = await fastify.inject({
+      method: "GET",
+      path: "/api/ping",
+    });
+
+    expect(response2.headers["content-type"]).toEqual(
+      "application/x-www-form-urlencoded"
+    );
+    expect(response2.body).toEqual("pong=true");
+  });
+
   test("correctly represents request bodies in OAS documents", async () => {
     const fastify = Fastify(fastifyOpts);
     await fastify.register(oas3Plugin, { ...pluginOpts });
@@ -272,7 +343,6 @@ describe("plugin", () => {
     });
 
     const jsonDoc = JSON.parse(jsonResponse.body);
-    console.error(inspect(jsonDoc, { depth: null }));
     const operation = jsonDoc.paths?.["/api/qwop"]?.post;
 
     const requestBody = operation?.requestBody;
