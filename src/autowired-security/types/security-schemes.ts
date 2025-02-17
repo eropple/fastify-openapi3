@@ -1,64 +1,107 @@
-import { type OAuthFlowObject, type SecuritySchemeObject } from "openapi3-ts";
+import { type FastifyRequest } from "fastify";
 
-import {
-  type HttpBasicHandlerFn,
-  type ApiKeyHandlerFn,
-  type HttpBearerFn,
-} from "./handlers.js";
+import { type HandlerRetval } from "./handlers.js";
 
-export type ApiKeySecurityScheme = {
+/**
+ * Primary handler type aliases.
+ */
+export type ApiKeyHandlerFn = (
+  value: string,
+  request: FastifyRequest
+) => HandlerRetval | Promise<HandlerRetval>;
+export type HttpBasicHandlerFn = (
+  credentials: { username: string; password: string },
+  request: FastifyRequest
+) => HandlerRetval | Promise<HandlerRetval>;
+export type HttpBearerFn = ApiKeyHandlerFn;
+
+/**
+ * Secondary (nullable) handler type aliases.
+ */
+export type NullableApiKeyHandlerFn = (
+  value: string | null,
+  request: FastifyRequest
+) => HandlerRetval | Promise<HandlerRetval>;
+export type NullableHttpBasicHandlerFn = (
+  credentials: { username: string; password: string } | null,
+  request: FastifyRequest
+) => HandlerRetval | Promise<HandlerRetval>;
+export type NullableHttpBearerFn = NullableApiKeyHandlerFn;
+
+/**
+ * ----- API Key Security Scheme -----
+ */
+export type ApiKeySecuritySchemeBase = {
   type: "apiKey";
   name: string;
   description?: string;
   in: "header" | "query" | "cookie";
-  /**
-   * Invoked with the contents of the appropriate field. No pre-validation is performed; may be empty.
-   */
+};
+
+export type ApiKeySecuritySchemeStrict = ApiKeySecuritySchemeBase & {
+  passNullIfNoneProvided?: false;
   fn: ApiKeyHandlerFn;
 };
 
-export type BasicAuthSecurityScheme = {
+export type ApiKeySecuritySchemeNullable = ApiKeySecuritySchemeBase & {
+  passNullIfNoneProvided: true;
+  fn: NullableApiKeyHandlerFn;
+};
+
+export type ApiKeySecurityScheme =
+  | ApiKeySecuritySchemeStrict
+  | ApiKeySecuritySchemeNullable;
+
+/**
+ * ----- HTTP Basic Security Scheme -----
+ */
+export type BasicAuthSecuritySchemeBase = {
   type: "http";
-  description?: string;
   scheme: "basic";
-  /**
-   * Invoked with the username and password. No pre-validation is performed; either may be empty.
-   */
+  description?: string;
+};
+
+export type BasicAuthSecuritySchemeStrict = BasicAuthSecuritySchemeBase & {
+  passNullIfNoneProvided?: false;
   fn: HttpBasicHandlerFn;
 };
 
-export type BearerSecurityScheme = {
+export type BasicAuthSecuritySchemeNullable = BasicAuthSecuritySchemeBase & {
+  passNullIfNoneProvided: true;
+  fn: NullableHttpBasicHandlerFn;
+};
+
+export type BasicAuthSecurityScheme =
+  | BasicAuthSecuritySchemeStrict
+  | BasicAuthSecuritySchemeNullable;
+
+/**
+ * ----- HTTP Bearer Security Scheme -----
+ */
+export type BearerSecuritySchemeBase = {
   type: "http";
-  description?: string;
   scheme: "bearer";
-  /**
-   * Invoked with the contents of the bearer token, AFTER `Bearer` has been stripped off. No other
-   * pre-validation is performed; may be empty.
-   *
-   * If `Bearer` is not found, this will
-   */
+  description?: string;
+};
+
+export type BearerSecuritySchemeStrict = BearerSecuritySchemeBase & {
+  passNullIfNoneProvided?: false;
   fn: HttpBearerFn;
 };
 
-// export type OAuth2SecurityScheme = {
-//   type: "oauth2";
-//   description?: string;
-//   flows: {
-//     implicit: OAuthFlowObject;
-//     password: OAuthFlowObject;
-//     clientCredentials: OAuthFlowObject;
-//     authorizationCode: OAuthFlowObject;
-//   };
-// };
+export type BearerSecuritySchemeNullable = BearerSecuritySchemeBase & {
+  passNullIfNoneProvided: true;
+  fn: NullableHttpBearerFn;
+};
 
-// export type OpenIDConnectSecurityScheme = {
-//   type: "openIdConnect";
-//   description?: string;
-//   openIdConnectUrl: string;
-// };
+export type BearerSecurityScheme =
+  | BearerSecuritySchemeStrict
+  | BearerSecuritySchemeNullable;
 
+/**
+ * Exported union type for all supported schemes.
+ */
 export type OAS3PluginSecurityScheme =
   | ApiKeySecurityScheme
   | BasicAuthSecurityScheme
   | BearerSecurityScheme;
-// | OAuth2SecurityScheme;

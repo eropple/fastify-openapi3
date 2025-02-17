@@ -921,4 +921,414 @@ describe("autowired security", () => {
 
     expect(response3.statusCode).toBe(401);
   });
+
+  describe("passNullIfNotFound variants", () => {
+    describe("API Key (header)", () => {
+      test("strict variant returns 401 when header missing", async () => {
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              StrictApiKey: {
+                type: "apiKey",
+                in: "header",
+                name: "X-Test-Key",
+                passNullIfNoneProvided: false,
+                fn: (value) =>
+                  value === "test" ? { ok: true } : { ok: false, code: 401 },
+              },
+            },
+          },
+        });
+
+        fastify.get(
+          "/test",
+          {
+            schema: { response: { 200: Type.Object({}) } },
+            oas: { security: { StrictApiKey: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const resNoHeader = await fastify.inject({
+          method: "GET",
+          path: "/test",
+        });
+        expect(resNoHeader.statusCode).toBe(401);
+
+        const resValid = await fastify.inject({
+          method: "GET",
+          path: "/test",
+          headers: { "X-Test-Key": "test" },
+        });
+        expect(resValid.statusCode).toBe(200);
+      });
+
+      test("nullable variant passes null to handler when header missing", async () => {
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              NullableApiKey: {
+                type: "apiKey",
+                in: "header",
+                name: "X-Test-Key",
+                passNullIfNoneProvided: true,
+                fn: (value) =>
+                  value === null || value === "test"
+                    ? { ok: true }
+                    : { ok: false, code: 401 },
+              },
+            },
+          },
+        });
+
+        fastify.get(
+          "/test",
+          {
+            schema: { response: { 200: Type.Object({}) } },
+            oas: { security: { NullableApiKey: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const resNoHeader = await fastify.inject({
+          method: "GET",
+          path: "/test",
+        });
+        expect(resNoHeader.statusCode).toBe(200);
+
+        const resValid = await fastify.inject({
+          method: "GET",
+          path: "/test",
+          headers: { "X-Test-Key": "test" },
+        });
+        expect(resValid.statusCode).toBe(200);
+
+        const resInvalid = await fastify.inject({
+          method: "GET",
+          path: "/test",
+          headers: { "X-Test-Key": "wrong" },
+        });
+        expect(resInvalid.statusCode).toBe(401);
+      });
+    });
+
+    describe("API Key (cookie)", () => {
+      test("strict variant returns 401 when cookie missing", async () => {
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(fastifyCookie);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              StrictCookie: {
+                type: "apiKey",
+                in: "cookie",
+                name: "session",
+                passNullIfNoneProvided: false,
+                fn: (value) =>
+                  value === "test" ? { ok: true } : { ok: false, code: 401 },
+              },
+            },
+          },
+        });
+
+        fastify.get(
+          "/test",
+          {
+            schema: { response: { 200: Type.Object({}) } },
+            oas: { security: { StrictCookie: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const resNoCookie = await fastify.inject({
+          method: "GET",
+          path: "/test",
+        });
+        expect(resNoCookie.statusCode).toBe(401);
+
+        const resValid = await fastify.inject({
+          method: "GET",
+          path: "/test",
+          cookies: { session: "test" },
+        });
+        expect(resValid.statusCode).toBe(200);
+      });
+
+      test("nullable variant passes null to handler when cookie missing", async () => {
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(fastifyCookie);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              NullableCookie: {
+                type: "apiKey",
+                in: "cookie",
+                name: "session",
+                passNullIfNoneProvided: true,
+                fn: (value) =>
+                  value === null || value === "test"
+                    ? { ok: true }
+                    : { ok: false, code: 401 },
+              },
+            },
+          },
+        });
+
+        fastify.get(
+          "/test",
+          {
+            schema: { response: { 200: Type.Object({}) } },
+            oas: { security: { NullableCookie: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const resNoCookie = await fastify.inject({
+          method: "GET",
+          path: "/test",
+        });
+        expect(resNoCookie.statusCode).toBe(200);
+
+        const resValid = await fastify.inject({
+          method: "GET",
+          path: "/test",
+          cookies: { session: "test" },
+        });
+        expect(resValid.statusCode).toBe(200);
+
+        const resInvalid = await fastify.inject({
+          method: "GET",
+          path: "/test",
+          cookies: { session: "wrong" },
+        });
+        expect(resInvalid.statusCode).toBe(401);
+      });
+    });
+
+    describe("HTTP Basic Auth", () => {
+      test("strict variant returns 401 when auth header missing", async () => {
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              StrictBasic: {
+                type: "http",
+                scheme: "basic",
+                passNullIfNoneProvided: false,
+                fn: (creds) =>
+                  creds.username === "user" && creds.password === "pass"
+                    ? { ok: true }
+                    : { ok: false, code: 401 },
+              },
+            },
+          },
+        });
+
+        fastify.get(
+          "/test",
+          {
+            schema: { response: { 200: Type.Object({}) } },
+            oas: { security: { StrictBasic: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const resNoAuth = await fastify.inject({
+          method: "GET",
+          path: "/test",
+        });
+        expect(resNoAuth.statusCode).toBe(401);
+
+        const resValid = await fastify.inject({
+          method: "GET",
+          path: "/test",
+          headers: {
+            Authorization:
+              "Basic " + Buffer.from("user:pass").toString("base64"),
+          },
+        });
+        expect(resValid.statusCode).toBe(200);
+      });
+
+      test("nullable variant passes null to handler when auth header missing", async () => {
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              NullableBasic: {
+                type: "http",
+                scheme: "basic",
+                passNullIfNoneProvided: true,
+                fn: (creds) =>
+                  creds === null ||
+                  (creds.username === "user" && creds.password === "pass")
+                    ? { ok: true }
+                    : { ok: false, code: 401 },
+              },
+            },
+          },
+        });
+
+        fastify.get(
+          "/test",
+          {
+            schema: { response: { 200: Type.Object({}) } },
+            oas: { security: { NullableBasic: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const resNoAuth = await fastify.inject({
+          method: "GET",
+          path: "/test",
+        });
+        expect(resNoAuth.statusCode).toBe(200);
+
+        const resValid = await fastify.inject({
+          method: "GET",
+          path: "/test",
+          headers: {
+            Authorization:
+              "Basic " + Buffer.from("user:pass").toString("base64"),
+          },
+        });
+        expect(resValid.statusCode).toBe(200);
+
+        const resInvalid = await fastify.inject({
+          method: "GET",
+          path: "/test",
+          headers: {
+            Authorization:
+              "Basic " + Buffer.from("wrong:wrong").toString("base64"),
+          },
+        });
+        expect(resInvalid.statusCode).toBe(401);
+      });
+    });
+
+    describe("HTTP Bearer Auth", () => {
+      test("strict variant returns 401 when auth header missing", async () => {
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              StrictBearer: {
+                type: "http",
+                scheme: "bearer",
+                passNullIfNoneProvided: false,
+                fn: (token) =>
+                  token === "valid-token"
+                    ? { ok: true }
+                    : { ok: false, code: 401 },
+              },
+            },
+          },
+        });
+
+        fastify.get(
+          "/test",
+          {
+            schema: { response: { 200: Type.Object({}) } },
+            oas: { security: { StrictBearer: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const resNoAuth = await fastify.inject({
+          method: "GET",
+          path: "/test",
+        });
+        expect(resNoAuth.statusCode).toBe(401);
+
+        const resValid = await fastify.inject({
+          method: "GET",
+          path: "/test",
+          headers: { Authorization: "Bearer valid-token" },
+        });
+        expect(resValid.statusCode).toBe(200);
+      });
+
+      test("nullable variant passes null to handler when auth header missing", async () => {
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              NullableBearer: {
+                type: "http",
+                scheme: "bearer",
+                passNullIfNoneProvided: true,
+                fn: (token) =>
+                  token === null || token === "valid-token"
+                    ? { ok: true }
+                    : { ok: false, code: 401 },
+              },
+            },
+          },
+        });
+
+        fastify.get(
+          "/test",
+          {
+            schema: { response: { 200: Type.Object({}) } },
+            oas: { security: { NullableBearer: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const resNoAuth = await fastify.inject({
+          method: "GET",
+          path: "/test",
+        });
+        expect(resNoAuth.statusCode).toBe(200);
+
+        const resValid = await fastify.inject({
+          method: "GET",
+          path: "/test",
+          headers: { Authorization: "Bearer valid-token" },
+        });
+        expect(resValid.statusCode).toBe(200);
+
+        const resInvalid = await fastify.inject({
+          method: "GET",
+          path: "/test",
+          headers: { Authorization: "Bearer wrong-token" },
+        });
+        expect(resInvalid.statusCode).toBe(401);
+      });
+    });
+  });
 });

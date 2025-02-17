@@ -78,6 +78,7 @@ export function attachSecuritySchemesToDocument(
       ...scheme,
     };
     delete sanitized.fn;
+    delete sanitized.passNullIfNoneProvided;
 
     logger.debug(`Attaching security scheme: ${name} (type: ${scheme.type}).`);
     doc.addSecurityScheme(name, sanitized);
