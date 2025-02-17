@@ -2,6 +2,7 @@ import { type FastifyRequest, type FastifyInstance } from "fastify";
 
 import { decodeBasicAuthHeader } from "../../util.js";
 
+import { type FastifyRequestWithCookies } from "./fastify-ext.js";
 import {
   type BearerSecurityScheme,
   type ApiKeySecurityScheme,
@@ -53,6 +54,36 @@ export function buildApiKeyHandler(
           return { ok: false, code: 401 };
         }
       };
+    case "cookie":
+      return (request) => {
+        const cookieRequest = request as FastifyRequestWithCookies;
+        const { cookies } = cookieRequest;
+
+        if (!cookies) {
+          request.log.warn(
+            "Cookie plugin not installed. Install @fastify/cookie plugin to use cookie-based security."
+          );
+          return { ok: false, code: 401 };
+        }
+
+        request.log.trace("Entering cookie API key handler.");
+        try {
+          const cookieValue = cookies[schemeName];
+
+          if (!cookieValue) {
+            return { ok: false, code: 401 };
+          }
+
+          return scheme.fn(cookieValue, request);
+        } catch (err) {
+          request.log.warn(
+            { err },
+            "Uncaught error in cookie API key handler."
+          );
+          return { ok: false, code: 401 };
+        }
+      };
+
     default:
       throw new Error(`Unsupported API key location: ${scheme.in}`);
   }

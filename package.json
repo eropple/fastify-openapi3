@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
+    "@fastify/cookie": "^11.0.2",
     "@fastify/formbody": "^8.0.2",
     "@sinclair/typebox": "^0.32.9",
     "@types/js-yaml": "^4.0.5",

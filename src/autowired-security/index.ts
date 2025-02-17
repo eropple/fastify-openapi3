@@ -55,8 +55,12 @@ export function validateOptions(
 
     // TODO:  support non-"header" locations for "apiKey"
     //        I just don't need it, so I haven't done it. PRs welcome.
-    if (scheme.type === "apiKey" && scheme.in !== "header") {
-      const msg = `Security scheme type "${scheme.type}" requires "in" to be "header"`;
+    if (
+      scheme.type === "apiKey" &&
+      scheme.in !== "header" &&
+      scheme.in !== "cookie"
+    ) {
+      const msg = `Security scheme type "${scheme.type}" requires "in" to be "header" or "cookie".`;
     }
   }
 }

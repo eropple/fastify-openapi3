@@ -1,3 +1,4 @@
+import { fastifyCookie } from "@fastify/cookie";
 import { Type } from "@sinclair/typebox";
 import Fastify, {
   type FastifyInstance,
@@ -436,6 +437,119 @@ describe("autowired security", () => {
         });
 
         expect(response2.statusCode).toBe(401);
+      });
+    });
+
+    describe("cookie-based security", () => {
+      test("basic cookie handler works", async () => {
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(fastifyCookie);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              MyCookie: {
+                type: "apiKey",
+                in: "cookie",
+                name: "session",
+                fn: (cookieValue, request) => {
+                  return cookieValue === "valid-session"
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
+                },
+              },
+            },
+          },
+        });
+
+        fastify.get(
+          "/protected",
+          {
+            schema: {
+              response: {
+                200: Type.Object({}),
+              },
+            },
+            oas: {
+              security: {
+                MyCookie: [],
+              },
+            },
+          },
+          async () => "hello"
+        );
+
+        await fastify.ready();
+
+        // Test valid cookie
+        const response = await fastify.inject({
+          method: "GET",
+          path: "/protected",
+          cookies: {
+            session: "valid-session",
+          },
+        });
+        expect(response.statusCode).toBe(200);
+
+        // Test invalid cookie
+        const response2 = await fastify.inject({
+          method: "GET",
+          path: "/protected",
+          cookies: {
+            session: "invalid-session",
+          },
+        });
+        expect(response2.statusCode).toBe(401);
+
+        // Test missing cookie
+        const response3 = await fastify.inject({
+          method: "GET",
+          path: "/protected",
+        });
+        expect(response3.statusCode).toBe(401);
+      });
+
+      test("cookie handler fails gracefully without cookie plugin", async () => {
+        const fastify = Fastify(fastifyOpts);
+        // Deliberately NOT registering cookie plugin
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              MyCookie: {
+                type: "apiKey",
+                in: "cookie",
+                name: "session",
+                fn: () => ({ ok: true }),
+              },
+            },
+          },
+        });
+
+        fastify.get(
+          "/protected",
+          {
+            oas: {
+              security: {
+                MyCookie: [],
+              },
+            },
+          },
+          async () => "hello"
+        );
+
+        await fastify.ready();
+
+        const response = await fastify.inject({
+          method: "GET",
+          path: "/protected",
+          cookies: {
+            session: "any-value",
+          },
+        });
+        expect(response.statusCode).toBe(401);
       });
     });
 
