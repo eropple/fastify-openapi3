@@ -1,0 +1,36 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# `@eropple/fastify-openapi3` Project Overview
+
+This project, `@eropple/fastify-openapi3`, is a [Fastify](mdc:https:/www.fastify.io) plugin for generating [OpenAPI 3.1](mdc:https:/spec.openapis.org/oas/v3.1.0) specifications. See [README.md](mdc:README.md) for the full user-facing documentation.
+
+## Core Functionality
+
+The plugin's main goal is to automate the creation of an OpenAPI spec from a Fastify application's routes and schemas. It heavily relies on [`@sinclair/typebox`](mdc:https:/github.com/sinclairzx81/typebox) for schema definitions.
+
+- **Plugin Entrypoint**: The main export is defined in [src/index.ts](mdc:src/index.ts).
+- **Core Logic**: The primary plugin logic resides in [src/plugin.ts](mdc:src/plugin.ts), which handles route introspection and spec generation.
+- **Configuration**: Plugin options are defined in [src/options.ts](mdc:src/options.ts). This is where users configure API metadata, UI (Rapidoc/Scalar), and security schemes.
+- **Dependencies**: Key dependencies and project scripts are listed in [package.json](mdc:package.json).
+
+## Schema Handling
+
+A key feature is the integration with `@sinclair/typebox`.
+
+- **Tagged Schemas**: The library provides a `schemaType()` helper in [src/schemas.ts](mdc:src/schemas.ts). This function "tags" a TypeBox schema, allowing the plugin to extract it into the global `#/components/schemas/` section of the OpenAPI document. This promotes schema reuse and cleaner generated clients.
+
+## Route Integration
+
+The plugin extends Fastify's route options with an `oas` property.
+
+- **`oas` Property**: Developers can add an `oas` object to their route definitions to provide extra OpenAPI metadata like `operationId`, `summary`, `description`, and `tags`.
+
+## Output
+
+The plugin adds several endpoints to the Fastify server:
+- `/openapi.json`: Serves the generated OpenAPI specification as JSON.
+- `/openapi.yaml`: Serves the specification as YAML.
+- UI endpoints (configurable) for an interactive API explorer like Rapidoc or Scalar.

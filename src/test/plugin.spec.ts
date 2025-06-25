@@ -3,7 +3,7 @@ import "../extensions.js";
 import { inspect } from "util";
 
 import { fastifyFormbody } from "@fastify/formbody";
-import { type Static, Type } from "@sinclair/typebox";
+import { type Static, type StringOptions, Type } from "@sinclair/typebox";
 import Fastify, {
   type FastifyInstance,
   type FastifyServerOptions,

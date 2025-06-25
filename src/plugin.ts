@@ -4,6 +4,7 @@ import { type RouteOptions } from "fastify";
 import { type onRequestMetaHookHandler } from "fastify/types/hooks.js";
 import { fastifyPlugin } from "fastify-plugin";
 import * as YAML from "js-yaml";
+import { cloneDeep } from "lodash";
 import {
   OpenApiBuilder,
   type SecurityRequirementObject,
@@ -79,7 +80,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
       }
 
       if (route?.oas?.omit !== true) {
-        routes.push(route);
+        routes.push(cloneDeep(route));
       }
 
       if (options.autowiredSecurity && !options.autowiredSecurity.disabled) {

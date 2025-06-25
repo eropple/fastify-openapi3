@@ -1,0 +1,34 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Tooling and Quality Assurance
+
+This project uses a combination of tools to ensure code quality, consistency, and correctness. The configuration for these tools is located in the root of the repository.
+
+We use `pnpm` for all NPM operations.
+
+## Testing with Vitest
+
+The project uses [Vitest](mdc:https:/vitest.dev) for unit and integration testing.
+
+- **Configuration**: The Vitest setup is defined in [vitest.config.ts](mdc:vitest.config.ts).
+- **Test Files**: Tests are located in `src/test/` and follow the `*.spec.ts` naming convention.
+- **Running Tests**: Tests can be executed with `npm run test`, as defined in [package.json](mdc:package.json).
+
+## Linting and Formatting
+
+Code style is enforced using ESLint and Prettier.
+
+- **ESLint**: The configuration is in [eslint.config.mjs](mdc:eslint.config.mjs). It uses plugins for TypeScript and import ordering. The main linting script is `npm run lint`.
+- **Prettier**: While not explicitly run via a script, Prettier rules are integrated into the ESLint configuration via `eslint-plugin-prettier`. The Prettier configuration can be found in `prettier.config.cjs`.
+
+## Git Hooks with Husky and lint-staged
+
+To automate quality checks before commits, the project uses Husky to manage Git hooks.
+
+- **Husky**: The configuration is in the [.husky/](mdc:.husky) directory.
+- **`pre-commit` Hook**: The [.husky/pre-commit](mdc:.husky/pre-commit) script runs before each commit.
+- **Lint-Staged**: This hook executes `lint-staged`, which is configured in [.lintstagedrc.mjs](mdc:.lintstagedrc.mjs). It runs `eslint --fix` on all staged TypeScript (`.ts`) files.
+- **Build and Test on Commit**: After linting, the `pre-commit` hook also runs the build (`npm run build`) and test (`npm run test`) scripts to ensure that only working code is committed.
