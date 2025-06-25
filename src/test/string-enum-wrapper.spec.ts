@@ -267,7 +267,6 @@ describe("StringEnum", () => {
       payload: { wrapper: { choice: "z" } },
     });
 
-    console.log(errResponse.body);
     expect(errResponse.statusCode).toBe(400);
     const body = JSON.parse(errResponse.body);
     expect(body.message).toMatch(/must be equal to one of the allowed values/);

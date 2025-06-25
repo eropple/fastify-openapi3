@@ -4,7 +4,7 @@ import { type RouteOptions } from "fastify";
 import { type onRequestMetaHookHandler } from "fastify/types/hooks.js";
 import { fastifyPlugin } from "fastify-plugin";
 import * as YAML from "js-yaml";
-import { cloneDeep } from "lodash";
+import { cloneDeep } from "lodash-es";
 import {
   OpenApiBuilder,
   type SecurityRequirementObject,
