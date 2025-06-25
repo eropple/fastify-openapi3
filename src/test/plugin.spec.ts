@@ -3,7 +3,7 @@ import "../extensions.js";
 import { inspect } from "util";
 
 import { fastifyFormbody } from "@fastify/formbody";
-import { type Static, Type } from "@sinclair/typebox";
+import { type Static, type StringOptions, Type } from "@sinclair/typebox";
 import Fastify, {
   type FastifyInstance,
   type FastifyServerOptions,
@@ -42,6 +42,29 @@ const QwopModel = schemaType(
   Type.Object({ qwop: Type.Number() })
 );
 type QwopModel = Static<typeof QwopModel>;
+
+export function StringEnum<T extends string[]>(
+  values: [...T],
+  options?: StringOptions
+) {
+  return Type.Unsafe<T[number]>({ ...Type.String(options), enum: values });
+}
+
+const AsdfModel = StringEnum(["a", "s", "d", "f"]);
+
+const AsdfChoiceModel = schemaType(
+  "AsdfChoiceModel",
+  Type.Object({
+    choice: AsdfModel,
+  })
+);
+
+const AsdfChoiceWrapperModel = schemaType(
+  "AsdfChoiceWrapperModel",
+  Type.Object({
+    wrapper: AsdfChoiceModel,
+  })
+);
 
 describe("plugin", () => {
   test("can add a base GET route", async () => {
@@ -556,5 +579,80 @@ describe("plugin", () => {
         required: true,
       },
     ]);
+  });
+  test("correctly validates AsdfChoiceWrapperModel with valid values", async () => {
+    const fastify = Fastify(fastifyOpts);
+    await fastify.register(oas3Plugin, { ...pluginOpts });
+
+    await fastify.register(async (fastify: FastifyInstance) => {
+      fastify.post("/asdf", {
+        schema: {
+          body: AsdfChoiceWrapperModel,
+          response: {
+            200: PingResponse,
+          },
+        },
+        handler: async (req, reply) => {
+          const body = req.body as Static<typeof AsdfChoiceWrapperModel>;
+          return { pong: body.wrapper.choice === "a" };
+        },
+      });
+    });
+    await fastify.ready();
+
+    // Validate OpenAPI document
+    const jsonResponse = await fastify.inject({
+      method: "GET",
+      path: "/openapi.json",
+    });
+
+    const jsonDoc = JSON.parse(jsonResponse.body);
+    const schema = jsonDoc.components?.schemas?.AsdfChoiceWrapperModel;
+    expect(schema).toBeDefined();
+    expect(schema).toMatchObject({
+      type: "object",
+      properties: {
+        wrapper: {
+          $ref: "#/components/schemas/AsdfChoiceModel",
+        },
+      },
+      required: ["wrapper"],
+    });
+
+    // Check that AsdfChoiceModel was also included in the schema
+    const asdfChoiceModel = jsonDoc.components?.schemas?.AsdfChoiceModel;
+    expect(asdfChoiceModel).toBeDefined();
+    expect(asdfChoiceModel).toMatchObject({
+      type: "object",
+      properties: {
+        choice: {
+          type: "string",
+          enum: ["a", "s", "d", "f"],
+        },
+      },
+      required: ["choice"],
+    });
+
+    // Validate successful request
+    const successResponse = await fastify.inject({
+      method: "POST",
+      path: "/asdf",
+      payload: { wrapper: { choice: "a" } },
+    });
+
+    expect(successResponse.statusCode).toBe(200);
+    expect(JSON.parse(successResponse.body)).toEqual({ pong: true });
+
+    // Should fail validation - 'z' is not in enum
+    const errResponse = await fastify.inject({
+      method: "POST",
+      path: "/asdf",
+      payload: { wrapper: { choice: "z" } },
+    });
+
+    console.log(errResponse.body);
+    expect(errResponse.statusCode).toBe(400);
+    const body = JSON.parse(errResponse.body);
+    expect(body.message).toMatch(/must be equal to one of the allowed values/);
   });
 });
