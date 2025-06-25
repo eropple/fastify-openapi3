@@ -1,6 +1,6 @@
 {
   "name": "@eropple/fastify-openapi3",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "author": "Ed Ropple",
   "license": "MIT",
   "type": "module",
