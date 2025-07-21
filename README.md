@@ -72,6 +72,9 @@ And now let's make a route:
         description: "This ping to the server lets you know that it has not been eaten by a grue.",
         deprecated: false,
         tags: ['meta'],
+        vendorPrefixedFields: {
+          "x-my-vendor-field": true,
+        },
       },
       handler: async (req, reply) => {
         return { pong: true };
