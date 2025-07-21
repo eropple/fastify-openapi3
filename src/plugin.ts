@@ -330,6 +330,14 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
             }
           }
 
+          if (oas?.vendorPrefixedFields) {
+            for (const [key, value] of Object.entries(
+              oas.vendorPrefixedFields
+            )) {
+              operation[key] = value;
+            }
+          }
+
           if (options.postOperationBuild) {
             options.postOperationBuild(route, operation);
           }

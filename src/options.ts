@@ -65,6 +65,8 @@ export type OperationBuildFn = (
   operation: OperationObject
 ) => void;
 
+export type OASVendorPrefixedField = `x-${string}`;
+
 export interface OAS3PluginOptions {
   /**
    * The base OpenAPI document information. Will be added verbatim
@@ -179,9 +181,10 @@ export interface OAS3RouteOptions {
   omit?: boolean;
 
   /**
-   * Any fields set here will be merged into the OpenAPI operation object.
+   * Any fields set here will be merged into the OpenAPI operation object. They must
+   * be prefixed with `x-` as per the OpenAPI specification.
    */
-  custom?: Record<string, any>;
+  vendorPrefixedFields?: Record<OASVendorPrefixedField, any>;
 
   body?: OAS3RequestBodyInfo;
 

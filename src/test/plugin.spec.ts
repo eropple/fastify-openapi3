@@ -557,4 +557,173 @@ describe("plugin", () => {
       },
     ]);
   });
+
+  test("correctly handles vendorPrefixedFields in operations", async () => {
+    const fastify = Fastify(fastifyOpts);
+    await fastify.register(oas3Plugin, { ...pluginOpts });
+
+    await fastify.register(async (fastify: FastifyInstance) => {
+      fastify.get("/vendor-test", {
+        schema: {
+          response: {
+            200: PingResponse,
+          },
+        },
+        oas: {
+          operationId: "vendorTest",
+          summary: "Test vendor extensions",
+          vendorPrefixedFields: {
+            "x-custom-field": "custom-value",
+            "x-rate-limit": 100,
+            "x-internal": true,
+            "x-complex-object": {
+              nested: "value",
+              array: [1, 2, 3],
+              bool: false,
+            },
+          },
+        },
+        handler: async (req, reply) => {
+          return { pong: true };
+        },
+      });
+
+      fastify.post("/vendor-test-post", {
+        schema: {
+          body: QwopModel,
+          response: {
+            201: PingResponse,
+          },
+        },
+        oas: {
+          operationId: "vendorTestPost",
+          vendorPrefixedFields: {
+            "x-example-only": "post-specific",
+            "x-validation-rules": ["required", "numeric"],
+          },
+        },
+        handler: async (req, reply) => {
+          return { pong: true };
+        },
+      });
+    });
+
+    await fastify.ready();
+
+    const jsonResponse = await fastify.inject({
+      method: "GET",
+      path: "/openapi.json",
+    });
+
+    const jsonDoc = JSON.parse(jsonResponse.body);
+
+    // Test GET operation vendor fields
+    const getOperation = jsonDoc.paths?.["/vendor-test"]?.get;
+    expect(getOperation).toBeTruthy();
+    expect(getOperation["x-custom-field"]).toEqual("custom-value");
+    expect(getOperation["x-rate-limit"]).toEqual(100);
+    expect(getOperation["x-internal"]).toEqual(true);
+    expect(getOperation["x-complex-object"]).toEqual({
+      nested: "value",
+      array: [1, 2, 3],
+      bool: false,
+    });
+
+    // Test POST operation vendor fields
+    const postOperation = jsonDoc.paths?.["/vendor-test-post"]?.post;
+    expect(postOperation).toBeTruthy();
+    expect(postOperation["x-example-only"]).toEqual("post-specific");
+    expect(postOperation["x-validation-rules"]).toEqual([
+      "required",
+      "numeric",
+    ]);
+
+    // Ensure regular operation fields are still present
+    expect(getOperation.operationId).toEqual("vendorTest");
+    expect(getOperation.summary).toEqual("Test vendor extensions");
+    expect(postOperation.operationId).toEqual("vendorTestPost");
+  });
+
+  test("handles operations without vendorPrefixedFields", async () => {
+    const fastify = Fastify(fastifyOpts);
+    await fastify.register(oas3Plugin, { ...pluginOpts });
+
+    await fastify.register(async (fastify: FastifyInstance) => {
+      fastify.get("/no-vendor-fields", {
+        schema: {
+          response: {
+            200: PingResponse,
+          },
+        },
+        oas: {
+          operationId: "noVendorFields",
+          summary: "No vendor extensions",
+        },
+        handler: async (req, reply) => {
+          return { pong: true };
+        },
+      });
+    });
+
+    await fastify.ready();
+
+    const jsonResponse = await fastify.inject({
+      method: "GET",
+      path: "/openapi.json",
+    });
+
+    const jsonDoc = JSON.parse(jsonResponse.body);
+    const operation = jsonDoc.paths?.["/no-vendor-fields"]?.get;
+
+    expect(operation).toBeTruthy();
+    expect(operation.operationId).toEqual("noVendorFields");
+    expect(operation.summary).toEqual("No vendor extensions");
+
+    // Ensure no x- prefixed fields are present
+    const vendorFields = Object.keys(operation).filter((key) =>
+      key.startsWith("x-")
+    );
+    expect(vendorFields).toEqual([]);
+  });
+
+  test("vendorPrefixedFields work with empty object", async () => {
+    const fastify = Fastify(fastifyOpts);
+    await fastify.register(oas3Plugin, { ...pluginOpts });
+
+    await fastify.register(async (fastify: FastifyInstance) => {
+      fastify.get("/empty-vendor-fields", {
+        schema: {
+          response: {
+            200: PingResponse,
+          },
+        },
+        oas: {
+          operationId: "emptyVendorFields",
+          vendorPrefixedFields: {},
+        },
+        handler: async (req, reply) => {
+          return { pong: true };
+        },
+      });
+    });
+
+    await fastify.ready();
+
+    const jsonResponse = await fastify.inject({
+      method: "GET",
+      path: "/openapi.json",
+    });
+
+    const jsonDoc = JSON.parse(jsonResponse.body);
+    const operation = jsonDoc.paths?.["/empty-vendor-fields"]?.get;
+
+    expect(operation).toBeTruthy();
+    expect(operation.operationId).toEqual("emptyVendorFields");
+
+    // Ensure no x- prefixed fields are present when empty object is provided
+    const vendorFields = Object.keys(operation).filter((key) =>
+      key.startsWith("x-")
+    );
+    expect(vendorFields).toEqual([]);
+  });
 });
