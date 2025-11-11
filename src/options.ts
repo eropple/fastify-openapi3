@@ -125,6 +125,13 @@ export interface OAS3PluginOptions {
    * invoked to try to figure it out. It's probably not great. Be explicit!
    */
   operationIdNameFn?: OperationIdFn;
+
+  /**
+   * If set to true, will print the OpenAPI document to the console
+   * on validation failure. If not, will only print errors. Off by default
+   * because in large enough projects this will print enough to smash buffers.
+   */
+  printSpecificationOnValidationFailure?: boolean;
 }
 
 export type OAS3ResponseTable<T> = {
