@@ -381,9 +381,10 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
         if (!result.valid) {
           if (options.exitOnInvalidDocument) {
             pLog.error(
-              { openApiErrors: result.errors, doc },
-              "Errors in OpenAPI validation."
+              { openApiErrors: result.errors },
+              "Errors in OpenAPI validation. Turn on debug logging to see the full computed doc."
             );
+            pLog.debug({ openapiDoc: doc });
             throw new OAS3SpecValidationError();
           }
 
