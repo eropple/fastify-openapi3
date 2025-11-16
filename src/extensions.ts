@@ -1,10 +1,10 @@
 import "fastify";
 import "openapi3-ts";
-import "@sinclair/typebox";
+import "typebox";
 
-import { type TSchema } from "@sinclair/typebox";
 import { type FastifySchema } from "fastify";
 import type { OpenAPIObject } from "openapi3-ts";
+import { type TSchema } from "typebox";
 
 import { type HandlerRetval } from "./autowired-security/types/handlers.js";
 import type { OAS3ResponseTable, OAS3RouteOptions } from "./options.js";
@@ -45,6 +45,6 @@ declare module "openapi3-ts" {
   interface SchemaObject extends Partial<TaggedSchema> {}
 }
 
-declare module "@sinclair/typebox" {
+declare module "typebox" {
   interface CustomOptions extends Partial<TaggedSchema> {}
 }

@@ -1,7 +1,7 @@
 import "../extensions.js";
-import { type Static, Type } from "@sinclair/typebox";
 import Fastify, { type FastifyInstance } from "fastify";
 import { type SchemaObject } from "openapi3-ts";
+import { type Static, Type } from "typebox";
 import { describe, expect, test } from "vitest";
 
 import { APPLICATION_JSON } from "../constants.js";

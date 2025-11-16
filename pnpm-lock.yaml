@@ -51,9 +51,6 @@ importers:
       '@fastify/formbody':
         specifier: ^8.0.2
         version: 8.0.2
-      '@sinclair/typebox':
-        specifier: ^0.32.9
-        version: 0.32.35
       '@types/js-yaml':
         specifier: ^4.0.5
         version: 4.0.9
@@ -102,6 +99,9 @@ importers:
       ts-node:
         specifier: ^10.9.1
         version: 10.9.2(@types/node@20.16.11)(typescript@5.5.2)
+      typebox:
+        specifier: ^1.0.53
+        version: 1.0.53
       typescript:
         specifier: ^5.5.2
         version: 5.5.2
@@ -523,9 +523,6 @@ packages:
   '@seriousme/openapi-schema-validator@1.7.1':
     resolution: {integrity: sha512-ROEusmdgP04NdmH0fgm6dxmm3w9EZ3wg6XGNSbo7WFPcIHNqQC7c1tWPo2fXgrLh7OVGPlzQk1nQQCZaRZv0dQ==}
     hasBin: true
-
-  '@sinclair/typebox@0.32.35':
-    resolution: {integrity: sha512-Ul3YyOTU++to8cgNkttakC0dWvpERr6RYoHO2W47DLbFvrwBDJUY31B1sImH6JZSYc4Kt4PyHtoPNu+vL2r2dA==}
 
   '@tsconfig/node10@1.0.11':
     resolution: {integrity: sha512-DcRjDCujK/kCk/cUe8Xz8ZSpm8mS3mNNpta+jGCA6USEDfktlNvm1+IuZ9eTcDbNk41BHwpHHeW+N1lKCz4zOw==}
@@ -1996,6 +1993,9 @@ packages:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
 
+  typebox@1.0.53:
+    resolution: {integrity: sha512-fCi3wnKP4owdhs+LRIUfkPzR4p5RLa3tM4O6gqO7TeAo6SsamvqA59yPb1GyKDcCgB/ClmifVJ9BqQ128a4uvQ==}
+
   typed-array-buffer@1.0.2:
     resolution: {integrity: sha512-gEymJYKZtKXzzBzM4jqa9w6Q1Jjm7x2d+sh19AdsD4wqnMPDYyvwpsIc2Q/835kHuo3BEQ7CjelGhfTsoBb2MQ==}
     engines: {node: '>= 0.4'}
@@ -2472,8 +2472,6 @@ snapshots:
       ajv-draft-04: 1.0.0(ajv@8.17.1)
       ajv-formats: 2.1.1(ajv@8.17.1)
       js-yaml: 4.1.0
-
-  '@sinclair/typebox@0.32.35': {}
 
   '@tsconfig/node10@1.0.11': {}
 
@@ -4132,6 +4130,8 @@ snapshots:
   type-check@0.4.0:
     dependencies:
       prelude-ls: 1.2.1
+
+  typebox@1.0.53: {}
 
   typed-array-buffer@1.0.2:
     dependencies:

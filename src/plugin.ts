@@ -1,5 +1,4 @@
 import OpenAPISchemaValidator from "@seriousme/openapi-schema-validator";
-import { TypeGuard } from "@sinclair/typebox";
 import { type RouteOptions } from "fastify";
 import { type onRequestMetaHookHandler } from "fastify/types/hooks.js";
 import { fastifyPlugin } from "fastify-plugin";
@@ -11,6 +10,7 @@ import {
   type OperationObject,
   type PathItemObject,
 } from "openapi3-ts";
+import { Type } from "typebox";
 
 import "./extensions.js";
 import {
@@ -172,7 +172,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
 
             if (body || oas?.body) {
               rLog.debug("Adding request body to operation.");
-              if (!TypeGuard.IsSchema(body)) {
+              if (!Type.IsSchema(body)) {
                 rLog.warn(
                   "Route has a request body that is not a schema. Skipping."
                 );
@@ -196,21 +196,34 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
             if (querystring) {
               rLog.debug("Adding query string to operation.");
 
-              if (!TypeGuard.IsObject(querystring)) {
+              // TypeBox 1.0: Fastify strips the ~kind property, so we can't use Type.IsObject()
+              // Instead, check if it's a JSON Schema object type
+              /* eslint-disable @typescript-eslint/no-explicit-any */
+              const isObjectSchema =
+                (querystring as any).type === "object" &&
+                (querystring as any).properties !== undefined;
+              /* eslint-enable @typescript-eslint/no-explicit-any */
+
+              if (!isObjectSchema) {
                 rLog.warn(
                   "Route has a querystring that is not a schema. Skipping."
                 );
               } else {
                 operation.parameters = operation.parameters ?? [];
 
-                if (querystring.additionalProperties) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                if ((querystring as any).additionalProperties) {
                   rLog.warn(
                     "Route's querystring has additionalProperties. This will be ignored."
                   );
                 }
 
                 const routeQsExtras = route.oas?.querystring ?? {};
-                const qsEntries = Object.entries(querystring.properties ?? {});
+                /* eslint-disable @typescript-eslint/no-explicit-any */
+                const qsEntries = Object.entries(
+                  (querystring as any).properties ?? {}
+                );
+                /* eslint-enable @typescript-eslint/no-explicit-any */
 
                 const unmatchedExtras = findMissingEntries(
                   routeQsExtras,
@@ -230,12 +243,15 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
                     name: qsKey,
                     in: "query",
                     deprecated: qsExtra.deprecated,
+                    /* eslint-disable @typescript-eslint/no-explicit-any */
                     description:
                       qsExtra.description ??
-                      qsValue.description ??
+                      (qsValue as any).description ??
                       "No querystring parameter description specified.",
-                    example: qsExtra.example ?? qsValue.example,
-                    required: querystring.required?.includes(qsKey) ?? false,
+                    example: qsExtra.example ?? (qsValue as any).example,
+                    required:
+                      (querystring as any).required?.includes(qsKey) ?? false,
+                    /* eslint-enable @typescript-eslint/no-explicit-any */
                     schema: qsExtra.schemaOverride ?? qsValue,
                     style: qsExtra.style,
                     allowEmptyValue: qsExtra.allowEmptyValue,
@@ -249,19 +265,32 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
             if (params) {
               rLog.debug("Adding params to operation.");
 
-              if (!TypeGuard.IsObject(params)) {
+              // TypeBox 1.0: Fastify strips the ~kind property, so we can't use Type.IsObject()
+              // Instead, check if it's a JSON Schema object type
+              /* eslint-disable @typescript-eslint/no-explicit-any */
+              const isObjectSchema =
+                (params as any).type === "object" &&
+                (params as any).properties !== undefined;
+              /* eslint-enable @typescript-eslint/no-explicit-any */
+
+              if (!isObjectSchema) {
                 rLog.warn("Route has a params that is not a schema. Skipping.");
               } else {
                 operation.parameters = operation.parameters ?? [];
 
-                if (params.additionalProperties) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                if ((params as any).additionalProperties) {
                   rLog.warn(
                     "Route's params has additionalProperties. This will be ignored."
                   );
                 }
 
                 const routeParamsExtras = route.oas?.params ?? {};
-                const paramsEntries = Object.entries(params.properties ?? {});
+                /* eslint-disable @typescript-eslint/no-explicit-any */
+                const paramsEntries = Object.entries(
+                  (params as any).properties ?? {}
+                );
+                /* eslint-enable @typescript-eslint/no-explicit-any */
 
                 const unmatchedExtras = findMissingEntries(
                   routeParamsExtras,
@@ -277,7 +306,9 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
                 for (const [paramKey, paramValue] of paramsEntries) {
                   const paramExtra = routeParamsExtras[paramKey] ?? {};
 
-                  if (!params.required?.includes(paramKey)) {
+                  /* eslint-disable @typescript-eslint/no-explicit-any */
+                  if (!(params as any).required?.includes(paramKey)) {
+                    /* eslint-enable @typescript-eslint/no-explicit-any */
                     rLog.warn(
                       { paramKey },
                       `Route's param is marked as not required. This will be ignored.`
@@ -287,12 +318,14 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
                   operation.parameters.push({
                     name: paramKey,
                     in: "path",
+                    /* eslint-disable @typescript-eslint/no-explicit-any */
                     description:
                       paramExtra.description ??
-                      paramValue.description ??
+                      (paramValue as any).description ??
                       "No path parameter description specified.",
                     required: true,
-                    example: paramExtra.example ?? paramValue.example,
+                    example: paramExtra.example ?? (paramValue as any).example,
+                    /* eslint-enable @typescript-eslint/no-explicit-any */
                     schema: paramExtra.schemaOverride ?? paramValue,
                   });
                 }

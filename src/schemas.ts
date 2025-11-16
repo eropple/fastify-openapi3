@@ -1,5 +1,5 @@
-import { type CustomOptions, type TSchema } from "@sinclair/typebox";
 import { pascalCase } from "change-case";
+import { type CustomOptions, type TSchema } from "typebox";
 
 import { SCHEMA_NAME_PROPERTY } from "./constants.js";
 
@@ -35,5 +35,34 @@ export function schemaType<T extends TSchema & CustomOptions>(
   name: string,
   type: T
 ): T & TaggedSchema {
-  return { ...type, [SCHEMA_NAME_PROPERTY]: Symbol(pascalCase(name)) };
+  // TypeBox 1.0: Preserve non-enumerable properties ~kind, ~readonly, ~optional
+  // The spread operator strips these, so we copy them explicitly
+  const result = {
+    ...type,
+    [SCHEMA_NAME_PROPERTY]: Symbol(pascalCase(name)),
+  } as T & TaggedSchema;
+
+  // Copy TypeBox 1.0 non-enumerable metadata properties
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  if ("~kind" in type) {
+    Object.defineProperty(result, "~kind", {
+      value: (type as any)["~kind"],
+      enumerable: false,
+    });
+  }
+  if ("~readonly" in type) {
+    Object.defineProperty(result, "~readonly", {
+      value: (type as any)["~readonly"],
+      enumerable: false,
+    });
+  }
+  if ("~optional" in type) {
+    Object.defineProperty(result, "~optional", {
+      value: (type as any)["~optional"],
+      enumerable: false,
+    });
+  }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+
+  return result;
 }

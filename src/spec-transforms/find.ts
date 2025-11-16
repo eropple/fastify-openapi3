@@ -1,4 +1,3 @@
-import { TypeGuard } from "@sinclair/typebox";
 import {
   type CallbackObject,
   type CallbacksObject,
@@ -12,6 +11,7 @@ import {
   type ResponsesObject,
   type SchemaObject,
 } from "openapi3-ts";
+import { Type } from "typebox";
 import { isFalsy } from "utility-types";
 
 import { APPLICATION_JSON } from "../constants.js";
@@ -46,7 +46,7 @@ function findTaggedSchemasInSchemas(
     s.oneOf ?? [],
     Object.values(s.properties ?? {}),
     s.additionalProperties,
-    TypeGuard.IsArray(s) && [s.items],
+    Type.IsArray(s) && [s.items],
   ]
     .flat()
     .filter(isNotPrimitive)

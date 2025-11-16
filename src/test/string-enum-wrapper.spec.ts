@@ -1,10 +1,10 @@
 import "../extensions.js";
 
-import { type Static, type StringOptions, Type } from "@sinclair/typebox";
 import Fastify, {
   type FastifyServerOptions,
   type FastifyInstance,
 } from "fastify";
+import { type Static, type TStringOptions, Type } from "typebox";
 import { describe, expect, test } from "vitest";
 
 import { oas3PluginAjv, schemaType } from "../index.js";
@@ -34,7 +34,7 @@ type PingResponse = Static<typeof PingResponse>;
 
 export function StringEnum<T extends string[]>(
   values: [...T],
-  options?: StringOptions
+  options?: TStringOptions
 ) {
   return Type.Unsafe<T[number]>({ ...Type.String(options), enum: values });
 }

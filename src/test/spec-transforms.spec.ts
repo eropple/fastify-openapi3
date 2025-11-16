@@ -1,9 +1,9 @@
-import { Type } from "@sinclair/typebox";
 import {
   type OpenAPIObject,
   type OperationObject,
   type SchemaObject,
 } from "openapi3-ts";
+import { Type } from "typebox";
 import { describe, expect, test } from "vitest";
 
 import { APPLICATION_JSON, SCHEMA_NAME_PROPERTY } from "../constants.js";

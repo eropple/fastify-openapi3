@@ -3,12 +3,12 @@ import "../extensions.js";
 import { inspect } from "util";
 
 import { fastifyFormbody } from "@fastify/formbody";
-import { type Static, type StringOptions, Type } from "@sinclair/typebox";
 import Fastify, {
   type FastifyInstance,
   type FastifyServerOptions,
 } from "fastify";
 import jsYaml from "js-yaml";
+import { type Static, type TStringOptions, Type } from "typebox";
 import { describe, expect, test } from "vitest";
 
 import { APPLICATION_JSON } from "../constants.js";

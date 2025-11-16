@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /*--------------------------------------------------------------------------
 
 @sinclair/typebox/extensions
@@ -27,38 +26,19 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import {
-  Kind,
-  type TSchema,
-  type SchemaOptions,
-  type Static,
-  TypeRegistry,
-} from "@sinclair/typebox";
-import { Value } from "@sinclair/typebox/value";
-
-function UnionOneOfCheck(schema: UnionOneOf<TSchema[]>, value: unknown) {
-  return (
-    1 ===
-    schema.oneOf.reduce(
-      (acc: number, schema: any) =>
-        Value.Check(schema, value) ? acc + 1 : acc,
-      0
-    )
-  );
-}
+import { type TSchema, type TSchemaOptions, type Static } from "typebox";
+import { Value } from "typebox/value";
 
 export interface UnionOneOf<T extends TSchema[]> extends TSchema {
-  [Kind]: "UnionOneOf";
-  static: { [K in keyof T]: Static<T[K]> }[number];
-  oneOf: T;
+  "~kind": "UnionOneOf";
+  "static": { [K in keyof T]: Static<T[K]> }[number];
+  "oneOf": T;
 }
 
 /** Creates a Union type with a `oneOf` schema representation */
 export function UnionOneOf<T extends TSchema[]>(
   oneOf: [...T],
-  options: SchemaOptions = {}
+  options: TSchemaOptions = {}
 ) {
-  if (!TypeRegistry.Has("UnionOneOf"))
-    TypeRegistry.Set("UnionOneOf", UnionOneOfCheck);
-  return { ...options, [Kind]: "UnionOneOf", oneOf } as UnionOneOf<T>;
+  return { ...options, "~kind": "UnionOneOf", oneOf } as UnionOneOf<T>;
 }

@@ -1,9 +1,9 @@
 import { fastifyCookie } from "@fastify/cookie";
-import { Type } from "@sinclair/typebox";
 import Fastify, {
   type FastifyInstance,
   type FastifyServerOptions,
 } from "fastify";
+import { Type } from "typebox";
 import { describe, expect, test } from "vitest";
 
 import { oas3PluginAjv } from "../ajv.js";
