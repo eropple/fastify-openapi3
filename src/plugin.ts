@@ -1,6 +1,6 @@
 import OpenAPISchemaValidator from "@seriousme/openapi-schema-validator";
 import { type RouteOptions } from "fastify";
-import { type onRequestMetaHookHandler } from "fastify/types/hooks.js";
+import { type preValidationMetaHookHandler } from "fastify/types/hooks.js";
 import { fastifyPlugin } from "fastify-plugin";
 import * as YAML from "js-yaml";
 import { cloneDeep } from "lodash-es";
@@ -68,7 +68,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
     // object-munging business during `onReady`.
     const routes: Array<RouteOptions> = [];
     fastify.addHook("onRoute", async (route) => {
-      const hookCache: Record<string, onRequestMetaHookHandler> = {};
+      const hookCache: Record<string, preValidationMetaHookHandler> = {};
 
       const rLog = pLog.child({
         route: { url: route.url, method: route.method },

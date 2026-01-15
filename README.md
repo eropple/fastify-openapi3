@@ -91,6 +91,125 @@ If you do a `npm run demo`, you'll get a UI that looks like the following:
 
 And there you go.
 
+## Autowired Security ##
+
+This plugin includes an autowired security system that automatically handles authentication based on your OpenAPI security schemes. Define your security schemes once, and the plugin will automatically validate credentials on routes that use them.
+
+### Basic Setup ###
+
+```ts
+await fastify.register(OAS3Plugin, {
+  openapiInfo: { title: 'My API', version: '1.0.0' },
+  autowiredSecurity: {
+    securitySchemes: {
+      ApiKey: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'X-Api-Key',
+        fn: (apiKey, request) => {
+          return apiKey === 'secret' ? { ok: true } : { ok: false, code: 401 };
+        },
+      },
+      BearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        fn: (token, request) => {
+          // Validate JWT or other bearer token
+          return isValidToken(token) ? { ok: true } : { ok: false, code: 401 };
+        },
+      },
+    },
+  },
+});
+
+// Use security on routes
+fastify.get('/protected', {
+  oas: {
+    security: { ApiKey: [] },
+  },
+}, async (req, reply) => {
+  return { data: 'secret stuff' };
+});
+```
+
+### Handler Return Values ###
+
+Security handlers return `{ ok: true }` for success, or `{ ok: false, code: 401 | 403 }` for failure:
+- Return `401` (Unauthorized) when credentials are missing or invalid
+- Return `403` (Forbidden) when credentials are valid but access is denied
+
+### AND/OR Security Logic ###
+
+OpenAPI supports combining security requirements:
+
+```ts
+// OR logic: either scheme can grant access
+oas: {
+  security: [{ ApiKey: [] }, { BearerAuth: [] }],
+}
+
+// AND logic: both schemes must pass
+oas: {
+  security: { ApiKey: [], BearerAuth: [] },
+}
+```
+
+### Optional Credentials with `passNullIfNoneProvided` ###
+
+By default, missing credentials return 401 immediately. Set `passNullIfNoneProvided: true` to receive `null` in your handler instead, allowing you to implement optional authentication:
+
+```ts
+securitySchemes: {
+  OptionalApiKey: {
+    type: 'apiKey',
+    in: 'header',
+    name: 'X-Api-Key',
+    passNullIfNoneProvided: true,
+    fn: (apiKey, request) => {
+      if (apiKey === null) {
+        // No key provided - allow anonymous access
+        return { ok: true };
+      }
+      // Key provided - validate it
+      return apiKey === 'secret' ? { ok: true } : { ok: false, code: 401 };
+    },
+  },
+}
+```
+
+### Accessing Request Body with `requiresParsedBody` ###
+
+Sometimes authentication decisions depend on the request body (e.g., request signing, body-based authorization). Set `requiresParsedBody: true` to receive the parsed body in your handler:
+
+```ts
+securitySchemes: {
+  BodyAwareAuth: {
+    type: 'apiKey',
+    in: 'header',
+    name: 'X-Api-Key',
+    requiresParsedBody: true,
+    fn: (apiKey, request, context) => {
+      // context.body contains the parsed request body
+      const body = context?.body as { resourceId?: string };
+
+      // Check if user has access to the requested resource
+      if (!userCanAccessResource(apiKey, body?.resourceId)) {
+        return { ok: false, code: 403 };
+      }
+      return { ok: true };
+    },
+  },
+}
+```
+
+When `requiresParsedBody` is not set or is `false`, the `context` parameter will be `undefined`.
+
+### Supported Security Schemes ###
+
+- **API Key** (`type: 'apiKey'`): Validates keys from headers or cookies
+- **HTTP Basic** (`type: 'http', scheme: 'basic'`): Validates username/password credentials
+- **HTTP Bearer** (`type: 'http', scheme: 'bearer'`): Validates bearer tokens
+
 ## Contributing ##
 Issues and PRs welcome! Constructive criticism on how to improve the library would be awesome, even as I use it in my own stuff and figure out where to go from there, too.
 

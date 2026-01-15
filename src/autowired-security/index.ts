@@ -1,11 +1,9 @@
 import {
-  type onRequestHookHandler,
   type FastifyBaseLogger,
   type RouteOptions,
-  type onRequestAsyncHookHandler,
   type FastifyRequest,
 } from "fastify";
-import { type onRequestMetaHookHandler } from "fastify/types/hooks.js";
+import { type preValidationMetaHookHandler } from "fastify/types/hooks.js";
 import { type OpenApiBuilder } from "openapi3-ts";
 
 import { OAS3PluginError } from "../errors.js";
@@ -79,6 +77,7 @@ export function attachSecuritySchemesToDocument(
     };
     delete sanitized.fn;
     delete sanitized.passNullIfNoneProvided;
+    delete sanitized.requiresParsedBody;
 
     logger.debug(`Attaching security scheme: ${name} (type: ${scheme.type}).`);
     doc.addSecurityScheme(name, sanitized);
@@ -86,14 +85,14 @@ export function attachSecuritySchemesToDocument(
 }
 
 /**
- * Investigates a provided route and attaches an `onRequest` handler that evaluates
+ * Investigates a provided route and attaches a `preValidation` handler that evaluates
  * the given security scheme(s) for the route according to the OAS specification.
  */
 export function attachSecurityToRoute(
   rLog: FastifyBaseLogger,
   route: RouteOptions,
   options: OAS3AutowireSecurityOptions,
-  hookCache: Record<string, onRequestMetaHookHandler>
+  hookCache: Record<string, preValidationMetaHookHandler>
 ) {
   if (options.disabled) {
     rLog.trace("Autowire disabled; skipping.");
@@ -136,21 +135,21 @@ export function attachSecurityToRoute(
   }
 
   // Add the security hook
-  const existingRouteRequestHooks = route.onRequest;
-  const newRouteRequestHooks: Array<onRequestMetaHookHandler> = [hookHandler];
-  if (Array.isArray(existingRouteRequestHooks)) {
-    newRouteRequestHooks.push(
-      ...existingRouteRequestHooks.filter((f) => f !== hookHandler)
+  const existingPreValidationHooks = route.preValidation;
+  const newPreValidationHooks: Array<preValidationMetaHookHandler> = [hookHandler];
+  if (Array.isArray(existingPreValidationHooks)) {
+    newPreValidationHooks.push(
+      ...existingPreValidationHooks.filter((f) => f !== hookHandler)
     );
   }
 
   rLog.debug(
     {
-      routeHookCount: newRouteRequestHooks.length,
+      routeHookCount: newPreValidationHooks.length,
       securitySchemes: security,
     },
     "Adding security hook to route."
   );
 
-  route.onRequest = newRouteRequestHooks;
+  route.preValidation = newPreValidationHooks;
 }
