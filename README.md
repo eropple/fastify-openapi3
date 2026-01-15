@@ -91,6 +91,171 @@ If you do a `npm run demo`, you'll get a UI that looks like the following:
 
 And there you go.
 
+## Autowired Security ##
+
+This plugin includes an autowired security system that automatically handles authentication based on your OpenAPI security schemes. Define your security schemes once, and the plugin will automatically validate credentials on routes that use them.
+
+### Basic Setup ###
+
+```ts
+await fastify.register(OAS3Plugin, {
+  openapiInfo: { title: 'My API', version: '1.0.0' },
+  autowiredSecurity: {
+    securitySchemes: {
+      ApiKey: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'X-Api-Key',
+        fn: (apiKey, request) => {
+          return apiKey === 'secret' ? { ok: true } : { ok: false, code: 401 };
+        },
+      },
+      BearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        fn: (token, request) => {
+          // Validate JWT or other bearer token
+          return isValidToken(token) ? { ok: true } : { ok: false, code: 401 };
+        },
+      },
+    },
+  },
+});
+
+// Use security on routes
+fastify.get('/protected', {
+  oas: {
+    security: { ApiKey: [] },
+  },
+}, async (req, reply) => {
+  return { data: 'secret stuff' };
+});
+```
+
+### Handler Return Values ###
+
+Security handlers return `{ ok: true }` for success, or `{ ok: false, code: 401 | 403 }` for failure:
+- Return `401` (Unauthorized) when credentials are missing or invalid
+- Return `403` (Forbidden) when credentials are valid but access is denied
+
+### AND/OR Security Logic ###
+
+OpenAPI supports combining security requirements:
+
+```ts
+// OR logic: either scheme can grant access
+oas: {
+  security: [{ ApiKey: [] }, { BearerAuth: [] }],
+}
+
+// AND logic: both schemes must pass
+oas: {
+  security: { ApiKey: [], BearerAuth: [] },
+}
+```
+
+### Optional Credentials with `passNullIfNoneProvided` ###
+
+By default, missing credentials return 401 immediately. Set `passNullIfNoneProvided: true` to receive `null` in your handler instead, allowing you to implement optional authentication:
+
+```ts
+securitySchemes: {
+  OptionalApiKey: {
+    type: 'apiKey',
+    in: 'header',
+    name: 'X-Api-Key',
+    passNullIfNoneProvided: true,
+    fn: (apiKey, request) => {
+      if (apiKey === null) {
+        // No key provided - allow anonymous access
+        return { ok: true };
+      }
+      // Key provided - validate it
+      return apiKey === 'secret' ? { ok: true } : { ok: false, code: 401 };
+    },
+  },
+}
+```
+
+### Accessing Request Body with `requiresParsedBody` ###
+
+Sometimes authentication decisions depend on the request body (e.g., request signing, body-based authorization). Set `requiresParsedBody: true` to receive the parsed body in your handler:
+
+```ts
+securitySchemes: {
+  BodyAwareAuth: {
+    type: 'apiKey',
+    in: 'header',
+    name: 'X-Api-Key',
+    requiresParsedBody: true,
+    fn: (apiKey, request, context) => {
+      // context.body contains the parsed request body
+      const body = context?.body as { resourceId?: string };
+
+      // Check if user has access to the requested resource
+      if (!userCanAccessResource(apiKey, body?.resourceId)) {
+        return { ok: false, code: 403 };
+      }
+      return { ok: true };
+    },
+  },
+}
+```
+
+When `requiresParsedBody` is not set or is `false`, the `context` parameter will be `undefined`.
+
+### Raw Body Access for Signature Validation ###
+
+For webhook signature validation or HMAC verification, you need access to the raw (unparsed) request body. Use the [`fastify-raw-body`](https://github.com/Eomm/fastify-raw-body) plugin alongside `requiresParsedBody`:
+
+```ts
+import fastifyRawBody from 'fastify-raw-body';
+
+// Register fastify-raw-body BEFORE the OAS plugin
+await fastify.register(fastifyRawBody, {
+  global: false,  // Only on routes that need it
+  runFirst: true, // Get raw body before any transforms
+});
+
+await fastify.register(OAS3Plugin, {
+  // ... other options
+  autowiredSecurity: {
+    securitySchemes: {
+      WebhookSignature: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'X-Signature',
+        requiresParsedBody: true,
+        fn: (signature, request, context) => {
+          // request.rawBody contains the raw string/buffer
+          const expectedSig = crypto
+            .createHmac('sha256', secret)
+            .update(request.rawBody as string)
+            .digest('hex');
+
+          if (signature !== expectedSig) {
+            return { ok: false, code: 401 };
+          }
+          return { ok: true };
+        },
+      },
+    },
+  },
+});
+
+// Enable rawBody on specific routes
+fastify.post('/webhook', {
+  config: { rawBody: true },
+  oas: { security: { WebhookSignature: [] } },
+}, handler);
+```
+
+### Supported Security Schemes ###
+
+- **API Key** (`type: 'apiKey'`): Validates keys from headers or cookies
+- **HTTP Basic** (`type: 'http', scheme: 'basic'`): Validates username/password credentials
+- **HTTP Bearer** (`type: 'http', scheme: 'bearer'`): Validates bearer tokens
+
 ## Contributing ##
 Issues and PRs welcome! Constructive criticism on how to improve the library would be awesome, even as I use it in my own stuff and figure out where to go from there, too.
 

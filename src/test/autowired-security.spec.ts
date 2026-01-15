@@ -3,6 +3,7 @@ import Fastify, {
   type FastifyInstance,
   type FastifyServerOptions,
 } from "fastify";
+import fastifyRawBody from "fastify-raw-body";
 import { Type } from "typebox";
 import { describe, expect, test } from "vitest";
 
@@ -1328,6 +1329,679 @@ describe("autowired security", () => {
           headers: { Authorization: "Bearer wrong-token" },
         });
         expect(resInvalid.statusCode).toBe(401);
+      });
+    });
+  });
+
+  describe("requiresParsedBody", () => {
+    describe("API Key with body access", () => {
+      test("handler receives parsed body when requiresParsedBody is true", async () => {
+        let receivedBody: unknown = undefined;
+
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              BodyAwareKey: {
+                type: "apiKey",
+                in: "header",
+                name: "X-Api-Key",
+                requiresParsedBody: true,
+                fn: (value, request, context) => {
+                  receivedBody = context?.body;
+                  return value === "test"
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
+                },
+              },
+            },
+          },
+        });
+
+        fastify.post(
+          "/test",
+          {
+            schema: {
+              body: Type.Object({ secret: Type.String() }),
+              response: { 200: Type.Object({}) },
+            },
+            oas: { security: { BodyAwareKey: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const response = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: {
+            "X-Api-Key": "test",
+            "Content-Type": "application/json",
+          },
+          payload: { secret: "my-secret-value" },
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(receivedBody).toEqual({ secret: "my-secret-value" });
+      });
+
+      test("handler receives undefined context when requiresParsedBody is false", async () => {
+        let receivedContext: unknown = "not-called";
+
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              NoBodyKey: {
+                type: "apiKey",
+                in: "header",
+                name: "X-Api-Key",
+                requiresParsedBody: false,
+                fn: (value, request, context) => {
+                  receivedContext = context;
+                  return value === "test"
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
+                },
+              },
+            },
+          },
+        });
+
+        fastify.post(
+          "/test",
+          {
+            schema: {
+              body: Type.Object({ data: Type.String() }),
+              response: { 200: Type.Object({}) },
+            },
+            oas: { security: { NoBodyKey: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const response = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: {
+            "X-Api-Key": "test",
+            "Content-Type": "application/json",
+          },
+          payload: { data: "some-data" },
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(receivedContext).toBeUndefined();
+      });
+
+      test("can make auth decisions based on body content", async () => {
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              BodyCheckKey: {
+                type: "apiKey",
+                in: "header",
+                name: "X-Api-Key",
+                requiresParsedBody: true,
+                fn: (value, request, context) => {
+                  const body = context?.body as
+                    | { allowAccess?: boolean }
+                    | undefined;
+                  if (value !== "test") return { ok: false, code: 401 };
+                  if (!body?.allowAccess) return { ok: false, code: 403 };
+                  return { ok: true };
+                },
+              },
+            },
+          },
+        });
+
+        fastify.post(
+          "/test",
+          {
+            schema: {
+              body: Type.Object({ allowAccess: Type.Boolean() }),
+              response: { 200: Type.Object({}) },
+            },
+            oas: { security: { BodyCheckKey: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        // Valid key but body says no access
+        const resForbidden = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: {
+            "X-Api-Key": "test",
+            "Content-Type": "application/json",
+          },
+          payload: { allowAccess: false },
+        });
+        expect(resForbidden.statusCode).toBe(403);
+
+        // Valid key and body allows access
+        const resAllowed = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: {
+            "X-Api-Key": "test",
+            "Content-Type": "application/json",
+          },
+          payload: { allowAccess: true },
+        });
+        expect(resAllowed.statusCode).toBe(200);
+
+        // Invalid key (body doesn't matter)
+        const resUnauth = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: {
+            "X-Api-Key": "wrong",
+            "Content-Type": "application/json",
+          },
+          payload: { allowAccess: true },
+        });
+        expect(resUnauth.statusCode).toBe(401);
+      });
+    });
+
+    describe("HTTP Bearer with body access", () => {
+      test("handler receives parsed body when requiresParsedBody is true", async () => {
+        let receivedBody: unknown = undefined;
+
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              BodyAwareBearer: {
+                type: "http",
+                scheme: "bearer",
+                requiresParsedBody: true,
+                fn: (token, request, context) => {
+                  receivedBody = context?.body;
+                  return token === "valid"
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
+                },
+              },
+            },
+          },
+        });
+
+        fastify.post(
+          "/test",
+          {
+            schema: {
+              body: Type.Object({ message: Type.String() }),
+              response: { 200: Type.Object({}) },
+            },
+            oas: { security: { BodyAwareBearer: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const response = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: {
+            "Authorization": "Bearer valid",
+            "Content-Type": "application/json",
+          },
+          payload: { message: "hello world" },
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(receivedBody).toEqual({ message: "hello world" });
+      });
+    });
+
+    describe("HTTP Basic with body access", () => {
+      test("handler receives parsed body when requiresParsedBody is true", async () => {
+        let receivedBody: unknown = undefined;
+
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              BodyAwareBasic: {
+                type: "http",
+                scheme: "basic",
+                requiresParsedBody: true,
+                fn: (creds, request, context) => {
+                  receivedBody = context?.body;
+                  return creds.username === "user" && creds.password === "pass"
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
+                },
+              },
+            },
+          },
+        });
+
+        fastify.post(
+          "/test",
+          {
+            schema: {
+              body: Type.Object({ value: Type.Number() }),
+              response: { 200: Type.Object({}) },
+            },
+            oas: { security: { BodyAwareBasic: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const response = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: {
+            "Authorization":
+              "Basic " + Buffer.from("user:pass").toString("base64"),
+            "Content-Type": "application/json",
+          },
+          payload: { value: 42 },
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(receivedBody).toEqual({ value: 42 });
+      });
+    });
+
+    describe("combined with passNullIfNoneProvided", () => {
+      test("nullable API key handler receives both null value and body context", async () => {
+        let receivedValue: string | null | undefined = undefined;
+        let receivedBody: unknown = undefined;
+
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              NullableBodyKey: {
+                type: "apiKey",
+                in: "header",
+                name: "X-Api-Key",
+                passNullIfNoneProvided: true,
+                requiresParsedBody: true,
+                fn: (value, request, context) => {
+                  receivedValue = value;
+                  receivedBody = context?.body;
+                  // Allow if no key provided but body has special flag
+                  const body = context?.body as
+                    | { anonymous?: boolean }
+                    | undefined;
+                  if (value === null && body?.anonymous) return { ok: true };
+                  if (value === "test") return { ok: true };
+                  return { ok: false, code: 401 };
+                },
+              },
+            },
+          },
+        });
+
+        fastify.post(
+          "/test",
+          {
+            schema: {
+              body: Type.Object({ anonymous: Type.Optional(Type.Boolean()) }),
+              response: { 200: Type.Object({}) },
+            },
+            oas: { security: { NullableBodyKey: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        // No key, but body says anonymous allowed
+        const resAnon = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: { "Content-Type": "application/json" },
+          payload: { anonymous: true },
+        });
+        expect(resAnon.statusCode).toBe(200);
+        expect(receivedValue).toBeNull();
+        expect(receivedBody).toEqual({ anonymous: true });
+
+        // No key, body doesn't allow anonymous
+        const resNoAnon = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: { "Content-Type": "application/json" },
+          payload: { anonymous: false },
+        });
+        expect(resNoAnon.statusCode).toBe(401);
+      });
+    });
+
+    describe("with AND/OR security logic", () => {
+      test("OR logic: body-aware handler works alongside regular handler", async () => {
+        let bodyHandlerCalled = false;
+        let regularHandlerCalled = false;
+
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              RegularKey: {
+                type: "apiKey",
+                in: "header",
+                name: "X-Regular-Key",
+                fn: (value) => {
+                  regularHandlerCalled = true;
+                  return value === "regular"
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
+                },
+              },
+              BodyKey: {
+                type: "apiKey",
+                in: "header",
+                name: "X-Body-Key",
+                requiresParsedBody: true,
+                fn: (value, request, context) => {
+                  bodyHandlerCalled = true;
+                  const body = context?.body as { token?: string } | undefined;
+                  return value === "body" && body?.token === "secret"
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
+                },
+              },
+            },
+          },
+        });
+
+        fastify.post(
+          "/test",
+          {
+            schema: {
+              body: Type.Object({ token: Type.Optional(Type.String()) }),
+              response: { 200: Type.Object({}) },
+            },
+            oas: {
+              // OR logic: either RegularKey OR BodyKey
+              security: [{ RegularKey: [] }, { BodyKey: [] }],
+            },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        // Regular key succeeds (short-circuits, body handler not called)
+        bodyHandlerCalled = false;
+        regularHandlerCalled = false;
+        const resRegular = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: {
+            "X-Regular-Key": "regular",
+            "Content-Type": "application/json",
+          },
+          payload: {},
+        });
+        expect(resRegular.statusCode).toBe(200);
+        expect(regularHandlerCalled).toBe(true);
+        expect(bodyHandlerCalled).toBe(false);
+
+        // Body key succeeds
+        bodyHandlerCalled = false;
+        regularHandlerCalled = false;
+        const resBody = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: {
+            "X-Body-Key": "body",
+            "Content-Type": "application/json",
+          },
+          payload: { token: "secret" },
+        });
+        expect(resBody.statusCode).toBe(200);
+        expect(bodyHandlerCalled).toBe(true);
+      });
+
+      test("AND logic: both regular and body-aware handlers must pass", async () => {
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              RegularKey: {
+                type: "apiKey",
+                in: "header",
+                name: "X-Regular-Key",
+                fn: (value) => {
+                  return value === "regular"
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
+                },
+              },
+              BodyKey: {
+                type: "apiKey",
+                in: "header",
+                name: "X-Body-Key",
+                requiresParsedBody: true,
+                fn: (value, request, context) => {
+                  const body = context?.body as { valid?: boolean } | undefined;
+                  return value === "body" && body?.valid
+                    ? { ok: true }
+                    : { ok: false, code: 403 };
+                },
+              },
+            },
+          },
+        });
+
+        fastify.post(
+          "/test",
+          {
+            schema: {
+              body: Type.Object({ valid: Type.Boolean() }),
+              response: { 200: Type.Object({}) },
+            },
+            oas: {
+              // AND logic: both RegularKey AND BodyKey required
+              security: { RegularKey: [], BodyKey: [] },
+            },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        // Both pass
+        const resBothPass = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: {
+            "X-Regular-Key": "regular",
+            "X-Body-Key": "body",
+            "Content-Type": "application/json",
+          },
+          payload: { valid: true },
+        });
+        expect(resBothPass.statusCode).toBe(200);
+
+        // Regular fails
+        const resRegularFail = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: {
+            "X-Regular-Key": "wrong",
+            "X-Body-Key": "body",
+            "Content-Type": "application/json",
+          },
+          payload: { valid: true },
+        });
+        expect(resRegularFail.statusCode).toBe(401);
+
+        // Body check fails (valid key but body says invalid)
+        const resBodyFail = await fastify.inject({
+          method: "POST",
+          path: "/test",
+          headers: {
+            "X-Regular-Key": "regular",
+            "X-Body-Key": "body",
+            "Content-Type": "application/json",
+          },
+          payload: { valid: false },
+        });
+        expect(resBodyFail.statusCode).toBe(403);
+      });
+    });
+
+    describe("requiresParsedBody not leaked to OAS document", () => {
+      test("requiresParsedBody is stripped from security scheme in OpenAPI doc", async () => {
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              BodyKey: {
+                type: "apiKey",
+                in: "header",
+                name: "X-Body-Key",
+                requiresParsedBody: true,
+                fn: () => ({ ok: true }),
+              },
+            },
+          },
+        });
+
+        await fastify.ready();
+
+        const jsonDoc = JSON.parse(
+          (
+            await fastify.inject({
+              method: "GET",
+              path: "/openapi.json",
+            })
+          ).body
+        );
+
+        expect(jsonDoc.components.securitySchemes.BodyKey).toEqual({
+          type: "apiKey",
+          in: "header",
+          name: "X-Body-Key",
+        });
+        expect(
+          jsonDoc.components.securitySchemes.BodyKey.requiresParsedBody
+        ).toBeUndefined();
+        expect(jsonDoc.components.securitySchemes.BodyKey.fn).toBeUndefined();
+      });
+    });
+
+    describe("raw body access for signature validation", () => {
+      test("handler can access rawBody via request when fastify-raw-body is registered", async () => {
+        let receivedRawBody: string | Buffer | undefined = undefined;
+        let receivedParsedBody: unknown = undefined;
+
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(fastifyRawBody, {
+          global: false, // Only on routes that need it
+          runFirst: true,
+        });
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              SignatureAuth: {
+                type: "apiKey",
+                in: "header",
+                name: "X-Signature",
+                requiresParsedBody: true,
+                fn: (signature, request, context) => {
+                  // Access raw body directly from request (fastify-raw-body pattern)
+                  receivedRawBody = request.rawBody;
+                  receivedParsedBody = context?.body;
+
+                  // Simulate signature validation
+                  const expectedSig = Buffer.from(
+                    request.rawBody as string
+                  ).toString("base64");
+                  return signature === expectedSig
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
+                },
+              },
+            },
+          },
+        });
+
+        fastify.post(
+          "/webhook",
+          {
+            config: { rawBody: true }, // Enable rawBody for this route
+            schema: {
+              body: Type.Object({ event: Type.String(), data: Type.Any() }),
+              response: { 200: Type.Object({}) },
+            },
+            oas: { security: { SignatureAuth: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const payload = JSON.stringify({ event: "test", data: { foo: "bar" } });
+        const signature = Buffer.from(payload).toString("base64");
+
+        const response = await fastify.inject({
+          method: "POST",
+          path: "/webhook",
+          headers: {
+            "X-Signature": signature,
+            "Content-Type": "application/json",
+          },
+          payload,
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(receivedRawBody).toBe(payload);
+        expect(receivedParsedBody).toEqual({
+          event: "test",
+          data: { foo: "bar" },
+        });
+
+        // Test with invalid signature
+        const badResponse = await fastify.inject({
+          method: "POST",
+          path: "/webhook",
+          headers: {
+            "X-Signature": "invalid-signature",
+            "Content-Type": "application/json",
+          },
+          payload,
+        });
+
+        expect(badResponse.statusCode).toBe(401);
       });
     });
   });

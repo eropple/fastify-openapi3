@@ -6,6 +6,7 @@ import {
   type ApiKeySecurityScheme,
   type BasicAuthSecurityScheme,
   type BearerSecurityScheme,
+  type SecurityHandlerContext,
 } from "./security-schemes.js";
 
 /**
@@ -18,7 +19,7 @@ export const HandlerRetvalReason = Object.freeze({
 });
 
 /**
- * A wrapped handler to be used as a Fastify onRequest hook.
+ * A wrapped handler to be used as a Fastify preValidation hook.
  */
 export type WrappedHandler = (
   request: FastifyRequest
@@ -35,6 +36,9 @@ export function buildApiKeyHandler(
   return (request: FastifyRequest) => {
     request.log.trace("Entering API key handler.");
     try {
+      const context: SecurityHandlerContext | undefined =
+        scheme.requiresParsedBody ? { body: request.body } : undefined;
+
       let value: string | undefined;
       switch (scheme.in) {
         case "header": {
@@ -53,12 +57,12 @@ export function buildApiKeyHandler(
 
       if (value === undefined || value === null) {
         if (scheme.passNullIfNoneProvided) {
-          return scheme.fn(null, request);
+          return scheme.fn(null, request, context);
         } else {
           return { ok: false, code: 401 };
         }
       }
-      return scheme.fn(value, request);
+      return scheme.fn(value, request, context);
     } catch (err) {
       request.log.warn({ err }, "Uncaught error in API key handler.");
       return { ok: false, code: 401 };
@@ -74,13 +78,16 @@ export function buildHttpBasicHandler(
 ): WrappedHandler {
   return (request) => {
     try {
+      const context: SecurityHandlerContext | undefined =
+        scheme.requiresParsedBody ? { body: request.body } : undefined;
+
       const headers = request.headers.authorization;
       const header = Array.isArray(headers) ? headers[0] : headers;
 
       // If no Authorization header exists
       if (!header) {
         if (scheme.passNullIfNoneProvided) {
-          return scheme.fn(null, request);
+          return scheme.fn(null, request, context);
         } else {
           return { ok: false, code: 401 };
         }
@@ -94,7 +101,7 @@ export function buildHttpBasicHandler(
       }
 
       // Valid header format, let handler validate the credentials
-      return scheme.fn(credentials, request);
+      return scheme.fn(credentials, request, context);
     } catch (err) {
       request.log.warn({ err }, "Uncaught error in HTTP basic auth handler.");
       return { ok: false, code: 401 };
@@ -110,17 +117,20 @@ export function buildHttpBearerHandler(
 ): WrappedHandler {
   return (request: FastifyRequest) => {
     try {
+      const context: SecurityHandlerContext | undefined =
+        scheme.requiresParsedBody ? { body: request.body } : undefined;
+
       const headers = request.headers.authorization;
       const header = Array.isArray(headers) ? headers[0] : headers;
       if (!header || !header.startsWith("Bearer ")) {
         if (scheme.passNullIfNoneProvided) {
-          return scheme.fn(null, request);
+          return scheme.fn(null, request, context);
         } else {
           return { ok: false, code: 401 };
         }
       }
       const token = header.slice(7);
-      return scheme.fn(token, request);
+      return scheme.fn(token, request, context);
     } catch (err) {
       request.log.warn({ err }, "Uncaught error in HTTP bearer handler.");
       return { ok: false, code: 401 };
