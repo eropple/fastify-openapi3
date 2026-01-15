@@ -1350,7 +1350,9 @@ describe("autowired security", () => {
                 requiresParsedBody: true,
                 fn: (value, request, context) => {
                   receivedBody = context?.body;
-                  return value === "test" ? { ok: true } : { ok: false, code: 401 };
+                  return value === "test"
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
                 },
               },
             },
@@ -1401,7 +1403,9 @@ describe("autowired security", () => {
                 requiresParsedBody: false,
                 fn: (value, request, context) => {
                   receivedContext = context;
-                  return value === "test" ? { ok: true } : { ok: false, code: 401 };
+                  return value === "test"
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
                 },
               },
             },
@@ -1449,7 +1453,9 @@ describe("autowired security", () => {
                 name: "X-Api-Key",
                 requiresParsedBody: true,
                 fn: (value, request, context) => {
-                  const body = context?.body as { allowAccess?: boolean } | undefined;
+                  const body = context?.body as
+                    | { allowAccess?: boolean }
+                    | undefined;
                   if (value !== "test") return { ok: false, code: 401 };
                   if (!body?.allowAccess) return { ok: false, code: 403 };
                   return { ok: true };
@@ -1527,7 +1533,9 @@ describe("autowired security", () => {
                 requiresParsedBody: true,
                 fn: (token, request, context) => {
                   receivedBody = context?.body;
-                  return token === "valid" ? { ok: true } : { ok: false, code: 401 };
+                  return token === "valid"
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
                 },
               },
             },
@@ -1552,7 +1560,7 @@ describe("autowired security", () => {
           method: "POST",
           path: "/test",
           headers: {
-            Authorization: "Bearer valid",
+            "Authorization": "Bearer valid",
             "Content-Type": "application/json",
           },
           payload: { message: "hello world" },
@@ -1606,7 +1614,8 @@ describe("autowired security", () => {
           method: "POST",
           path: "/test",
           headers: {
-            Authorization: "Basic " + Buffer.from("user:pass").toString("base64"),
+            "Authorization":
+              "Basic " + Buffer.from("user:pass").toString("base64"),
             "Content-Type": "application/json",
           },
           payload: { value: 42 },
@@ -1638,7 +1647,9 @@ describe("autowired security", () => {
                   receivedValue = value;
                   receivedBody = context?.body;
                   // Allow if no key provided but body has special flag
-                  const body = context?.body as { anonymous?: boolean } | undefined;
+                  const body = context?.body as
+                    | { anonymous?: boolean }
+                    | undefined;
                   if (value === null && body?.anonymous) return { ok: true };
                   if (value === "test") return { ok: true };
                   return { ok: false, code: 401 };
@@ -1701,7 +1712,9 @@ describe("autowired security", () => {
                 name: "X-Regular-Key",
                 fn: (value) => {
                   regularHandlerCalled = true;
-                  return value === "regular" ? { ok: true } : { ok: false, code: 401 };
+                  return value === "regular"
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
                 },
               },
               BodyKey: {
@@ -1782,7 +1795,9 @@ describe("autowired security", () => {
                 in: "header",
                 name: "X-Regular-Key",
                 fn: (value) => {
-                  return value === "regular" ? { ok: true } : { ok: false, code: 401 };
+                  return value === "regular"
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
                 },
               },
               BodyKey: {
@@ -1894,7 +1909,9 @@ describe("autowired security", () => {
           in: "header",
           name: "X-Body-Key",
         });
-        expect(jsonDoc.components.securitySchemes.BodyKey.requiresParsedBody).toBeUndefined();
+        expect(
+          jsonDoc.components.securitySchemes.BodyKey.requiresParsedBody
+        ).toBeUndefined();
         expect(jsonDoc.components.securitySchemes.BodyKey.fn).toBeUndefined();
       });
     });

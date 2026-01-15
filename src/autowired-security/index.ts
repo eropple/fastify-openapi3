@@ -136,7 +136,9 @@ export function attachSecurityToRoute(
 
   // Add the security hook
   const existingPreValidationHooks = route.preValidation;
-  const newPreValidationHooks: Array<preValidationMetaHookHandler> = [hookHandler];
+  const newPreValidationHooks: Array<preValidationMetaHookHandler> = [
+    hookHandler,
+  ];
   if (Array.isArray(existingPreValidationHooks)) {
     newPreValidationHooks.push(
       ...existingPreValidationHooks.filter((f) => f !== hookHandler)
