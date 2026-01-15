@@ -204,6 +204,52 @@ securitySchemes: {
 
 When `requiresParsedBody` is not set or is `false`, the `context` parameter will be `undefined`.
 
+### Raw Body Access for Signature Validation ###
+
+For webhook signature validation or HMAC verification, you need access to the raw (unparsed) request body. Use the [`fastify-raw-body`](https://github.com/Eomm/fastify-raw-body) plugin alongside `requiresParsedBody`:
+
+```ts
+import fastifyRawBody from 'fastify-raw-body';
+
+// Register fastify-raw-body BEFORE the OAS plugin
+await fastify.register(fastifyRawBody, {
+  global: false,  // Only on routes that need it
+  runFirst: true, // Get raw body before any transforms
+});
+
+await fastify.register(OAS3Plugin, {
+  // ... other options
+  autowiredSecurity: {
+    securitySchemes: {
+      WebhookSignature: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'X-Signature',
+        requiresParsedBody: true,
+        fn: (signature, request, context) => {
+          // request.rawBody contains the raw string/buffer
+          const expectedSig = crypto
+            .createHmac('sha256', secret)
+            .update(request.rawBody as string)
+            .digest('hex');
+
+          if (signature !== expectedSig) {
+            return { ok: false, code: 401 };
+          }
+          return { ok: true };
+        },
+      },
+    },
+  },
+});
+
+// Enable rawBody on specific routes
+fastify.post('/webhook', {
+  config: { rawBody: true },
+  oas: { security: { WebhookSignature: [] } },
+}, handler);
+```
+
 ### Supported Security Schemes ###
 
 - **API Key** (`type: 'apiKey'`): Validates keys from headers or cookies

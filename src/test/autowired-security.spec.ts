@@ -3,6 +3,7 @@ import Fastify, {
   type FastifyInstance,
   type FastifyServerOptions,
 } from "fastify";
+import fastifyRawBody from "fastify-raw-body";
 import { Type } from "typebox";
 import { describe, expect, test } from "vitest";
 
@@ -1913,6 +1914,94 @@ describe("autowired security", () => {
           jsonDoc.components.securitySchemes.BodyKey.requiresParsedBody
         ).toBeUndefined();
         expect(jsonDoc.components.securitySchemes.BodyKey.fn).toBeUndefined();
+      });
+    });
+
+    describe("raw body access for signature validation", () => {
+      test("handler can access rawBody via request when fastify-raw-body is registered", async () => {
+        let receivedRawBody: string | Buffer | undefined = undefined;
+        let receivedParsedBody: unknown = undefined;
+
+        const fastify = Fastify(fastifyOpts);
+        await fastify.register(fastifyRawBody, {
+          global: false, // Only on routes that need it
+          runFirst: true,
+        });
+        await fastify.register(oas3Plugin, {
+          ...pluginOpts,
+          autowiredSecurity: {
+            ...autowiredOpts,
+            securitySchemes: {
+              SignatureAuth: {
+                type: "apiKey",
+                in: "header",
+                name: "X-Signature",
+                requiresParsedBody: true,
+                fn: (signature, request, context) => {
+                  // Access raw body directly from request (fastify-raw-body pattern)
+                  receivedRawBody = request.rawBody;
+                  receivedParsedBody = context?.body;
+
+                  // Simulate signature validation
+                  const expectedSig = Buffer.from(
+                    request.rawBody as string
+                  ).toString("base64");
+                  return signature === expectedSig
+                    ? { ok: true }
+                    : { ok: false, code: 401 };
+                },
+              },
+            },
+          },
+        });
+
+        fastify.post(
+          "/webhook",
+          {
+            config: { rawBody: true }, // Enable rawBody for this route
+            schema: {
+              body: Type.Object({ event: Type.String(), data: Type.Any() }),
+              response: { 200: Type.Object({}) },
+            },
+            oas: { security: { SignatureAuth: [] } },
+          },
+          async () => "ok"
+        );
+
+        await fastify.ready();
+
+        const payload = JSON.stringify({ event: "test", data: { foo: "bar" } });
+        const signature = Buffer.from(payload).toString("base64");
+
+        const response = await fastify.inject({
+          method: "POST",
+          path: "/webhook",
+          headers: {
+            "X-Signature": signature,
+            "Content-Type": "application/json",
+          },
+          payload,
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(receivedRawBody).toBe(payload);
+        expect(receivedParsedBody).toEqual({
+          event: "test",
+          data: { foo: "bar" },
+        });
+
+        // Test with invalid signature
+        const badResponse = await fastify.inject({
+          method: "POST",
+          path: "/webhook",
+          headers: {
+            "X-Signature": "invalid-signature",
+            "Content-Type": "application/json",
+          },
+          payload,
+        });
+
+        expect(badResponse.statusCode).toBe(401);
       });
     });
   });
