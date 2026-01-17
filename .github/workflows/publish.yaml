@@ -37,6 +37,8 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
+      - name: Upgrade npm for trusted publishers (requires npm 11.5.1+)
+        run: npm install -g npm@latest
       - name: install pnpm
         run: npm install -g pnpm
 
