@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "author": "Ed Ropple",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eropple/fastify-openapi3"
+  },
   "type": "module",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
