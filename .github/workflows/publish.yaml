@@ -14,26 +14,26 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
       - name: install pnpm
         run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-        if: matrix.os == 'ubuntu-latest'
       - run: pnpm test
-        if: matrix.os == 'ubuntu-latest'
-      - run: npm test
 
   publish-npm:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
@@ -54,5 +54,3 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: npm publish --access=public
-        env:
-          NODE_AUTH_TOKEN: "${{secrets.NPM_AUTH_TOKEN}}"
