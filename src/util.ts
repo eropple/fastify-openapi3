@@ -12,11 +12,11 @@ import {
 } from "utility-types";
 
 import { SCHEMA_NAME_PROPERTY } from "./constants.js";
-import { type TaggedSchema } from "./schemas.js";
+import type { TaggedSchema } from "./schemas.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isTruthy<T extends Exclude<any, Falsy>>(
-  item: T | null | undefined
+  item: T | null | undefined,
 ): item is Exclude<T, Falsy> {
   return !isFalsy(item);
 }
@@ -40,15 +40,15 @@ export function isTaggedSchema(t: any): t is SchemaObject & TaggedSchema {
 
 export function findMissingEntries<T extends object, U extends object>(
   mainObject: T,
-  comparisonObject: U | null | undefined
+  comparisonObject: U | null | undefined,
 ): (keyof T)[] {
   return Object.keys(mainObject).filter(
-    (key) => !(comparisonObject && key in comparisonObject)
+    (key) => !(comparisonObject && key in comparisonObject),
   ) as (keyof T)[];
 }
 
 export function decodeBasicAuthHeader(
-  header: string
+  header: string,
 ): { username: string; password: string } | null {
   if (!header.startsWith("Basic ")) {
     return null;
@@ -59,7 +59,7 @@ export function decodeBasicAuthHeader(
 
   // Decode the base64 string
   const decodedCredentials = Buffer.from(base64Credentials, "base64").toString(
-    "utf-8"
+    "utf-8",
   );
 
   // Split the decoded string into username and password

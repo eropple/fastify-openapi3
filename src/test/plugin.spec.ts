@@ -1,19 +1,17 @@
 import "../extensions.js";
 
-import { inspect } from "util";
-
 import { fastifyFormbody } from "@fastify/formbody";
 import Fastify, {
   type FastifyInstance,
   type FastifyServerOptions,
 } from "fastify";
 import jsYaml from "js-yaml";
-import { type Static, type TStringOptions, Type } from "typebox";
+import { type Static, Type } from "typebox";
 import { describe, expect, test } from "vitest";
 
 import { APPLICATION_JSON } from "../constants.js";
 import { oas3PluginAjv, schemaType } from "../index.js";
-import { oas3Plugin, type OAS3PluginOptions } from "../plugin.js";
+import { type OAS3PluginOptions, oas3Plugin } from "../plugin.js";
 
 const fastifyOpts: FastifyServerOptions = {
   logger: { level: "error" },
@@ -33,13 +31,13 @@ const pluginOpts: OAS3PluginOptions = {
 
 const PingResponse = schemaType(
   "PingResponse",
-  Type.Object({ pong: Type.Boolean() })
+  Type.Object({ pong: Type.Boolean() }),
 );
 type PingResponse = Static<typeof PingResponse>;
 
 const QwopModel = schemaType(
   "QwopRequestBody",
-  Type.Object({ qwop: Type.Number() })
+  Type.Object({ qwop: Type.Number() }),
 );
 type QwopModel = Static<typeof QwopModel>;
 
@@ -67,7 +65,7 @@ describe("plugin", () => {
             },
           });
         },
-        { prefix: "/api" }
+        { prefix: "/api" },
       );
       await fastify.ready();
 
@@ -77,7 +75,7 @@ describe("plugin", () => {
       expect(oas.components?.schemas?.PingResponse).toBeTruthy();
       expect(op?.operationId).toEqual("pingGet");
       expect(
-        op?.responses?.["200"]?.content?.[APPLICATION_JSON]?.schema
+        op?.responses?.["200"]?.content?.[APPLICATION_JSON]?.schema,
       ).toEqual({ $ref: "#/components/schemas/PingResponse" });
     });
 
@@ -120,7 +118,7 @@ describe("plugin", () => {
             },
           });
         },
-        { prefix: "/api" }
+        { prefix: "/api" },
       );
       await fastify.ready();
 
@@ -161,7 +159,7 @@ describe("plugin", () => {
             },
           });
         },
-        { prefix: "/api" }
+        { prefix: "/api" },
       );
 
       await fastify.ready();
@@ -220,7 +218,7 @@ describe("plugin", () => {
             },
           });
         },
-        { prefix: "/api" }
+        { prefix: "/api" },
       );
 
       await fastify.ready();
@@ -260,7 +258,7 @@ describe("plugin", () => {
       });
 
       expect(response2.headers["content-type"]).toEqual(
-        "application/x-www-form-urlencoded"
+        "application/x-www-form-urlencoded",
       );
       expect(response2.body).toEqual("pong=true");
     });
@@ -286,7 +284,7 @@ describe("plugin", () => {
             },
           });
         },
-        { prefix: "/api" }
+        { prefix: "/api" },
       );
       await fastify.ready();
 
@@ -338,7 +336,7 @@ describe("plugin", () => {
             },
           });
         },
-        { prefix: "/api" }
+        { prefix: "/api" },
       );
       await fastify.ready();
 
@@ -385,7 +383,7 @@ describe("plugin", () => {
             },
           });
         },
-        { prefix: "/api" }
+        { prefix: "/api" },
       );
       await fastify.ready();
 
@@ -692,7 +690,7 @@ describe("plugin", () => {
 
       // Ensure no x- prefixed fields are present
       const vendorFields = Object.keys(operation).filter((key) =>
-        key.startsWith("x-")
+        key.startsWith("x-"),
       );
       expect(vendorFields).toEqual([]);
     });
@@ -733,7 +731,7 @@ describe("plugin", () => {
 
       // Ensure no x- prefixed fields are present when empty object is provided
       const vendorFields = Object.keys(operation).filter((key) =>
-        key.startsWith("x-")
+        key.startsWith("x-"),
       );
       expect(vendorFields).toEqual([]);
     });

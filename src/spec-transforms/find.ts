@@ -1,25 +1,23 @@
-import {
-  type CallbackObject,
-  type CallbacksObject,
-  type OpenAPIObject,
-  type OperationObject,
-  type ParameterObject,
-  type PathItemObject,
-  type ReferenceObject,
-  type RequestBodyObject,
-  type ResponseObject,
-  type ResponsesObject,
-  type SchemaObject,
+import type {
+  CallbackObject,
+  CallbacksObject,
+  OpenAPIObject,
+  OperationObject,
+  ParameterObject,
+  PathItemObject,
+  ReferenceObject,
+  RequestBodyObject,
+  ResponseObject,
+  ResponsesObject,
+  SchemaObject,
 } from "openapi3-ts";
 import { Type } from "typebox";
 import { isFalsy } from "utility-types";
 
-import { APPLICATION_JSON } from "../constants.js";
 import {
   isNotPrimitive,
   isNotReferenceObject,
   isTaggedSchema,
-  isTruthy,
 } from "../util.js";
 
 import {
@@ -29,15 +27,19 @@ import {
 } from "./oas-helpers.js";
 
 function findTaggedSchemasInSchemas(
-  s: SchemaObject
+  s: SchemaObject,
 ): Array<TaggedSchemaObject> {
   // TODO:  remove duplication
   //        This method isn't optimal. It returns the same schemas multiple times
   //        if they're nested. This isn't the worst thing in the world, because
   //        they get deduplicated later and we are not dealing with large N here,
   //        but it does add time to plugin startup.
-  if (isFalsy(s.type) && !s.allOf && !s.anyOf && !s.oneOf) {
-    throw new Error(`Schema object has no type: ${JSON.stringify(s)}`);
+
+  // Empty schemas {} are valid in OAS 3.1 (JSON Schema 2020-12) and mean "any value".
+  // TypeBox's Type.Any() and Type.Unknown() both produce {}.
+  // These schemas have no nested content to search, so return early.
+  if (isFalsy(s.type) && !s.allOf && !s.anyOf && !s.oneOf && !s.properties) {
+    return isTaggedSchema(s) ? [s] : [];
   }
 
   const ret = [
@@ -60,7 +62,7 @@ function findTaggedSchemasInSchemas(
 }
 
 function findTaggedSchemasInResponse(
-  r: ResponseObject
+  r: ResponseObject,
 ): Array<TaggedSchemaObject> {
   const ret: Array<TaggedSchemaObject> = [];
 
@@ -76,7 +78,7 @@ function findTaggedSchemasInResponse(
 }
 
 function findTaggedSchemasInResponses(
-  r: ResponsesObject
+  r: ResponsesObject,
 ): Array<TaggedSchemaObject> {
   return Object.keys(r)
     .map((k) => r[k] as ResponseObject | ReferenceObject)
@@ -85,7 +87,7 @@ function findTaggedSchemasInResponses(
 }
 
 function findTaggedSchemasInCallbacks(
-  c: CallbacksObject
+  c: CallbacksObject,
 ): Array<TaggedSchemaObject> {
   return (
     Object.keys(c)
@@ -99,7 +101,7 @@ function findTaggedSchemasInCallbacks(
 }
 
 function findTaggedSchemasInRequestBody(
-  rb: RequestBodyObject
+  rb: RequestBodyObject,
 ): Array<TaggedSchemaObject> {
   const ret: Array<TaggedSchemaObject> = [];
 
@@ -115,7 +117,7 @@ function findTaggedSchemasInRequestBody(
 }
 
 function findTaggedSchemasInParameter(
-  parameter: ParameterObject
+  parameter: ParameterObject,
 ): Array<TaggedSchemaObject> {
   return [parameter]
     .filter(isNotReferenceObject)
@@ -124,7 +126,7 @@ function findTaggedSchemasInParameter(
 }
 
 function findTaggedSchemasInOperation(
-  operation: OperationObject
+  operation: OperationObject,
 ): Array<TaggedSchemaObject> {
   const ret: Array<TaggedSchemaObject> = [];
 
@@ -132,7 +134,7 @@ function findTaggedSchemasInOperation(
   ret.push(
     ...(operation.parameters ?? [])
       .filter(isNotReferenceObject)
-      .flatMap(findTaggedSchemasInParameter)
+      .flatMap(findTaggedSchemasInParameter),
   );
 
   // request body (but only for JSON, everything else is outta scope)
@@ -151,7 +153,7 @@ function findTaggedSchemasInOperation(
 }
 
 function findTaggedSchemasInPathItem(
-  path: PathItemObject
+  path: PathItemObject,
 ): Array<TaggedSchemaObject> {
   const ret = operations(path).flatMap(findTaggedSchemasInOperation);
 
@@ -159,7 +161,7 @@ function findTaggedSchemasInPathItem(
     ret.push(
       ...path.parameters
         .filter(isNotReferenceObject)
-        .flatMap(findTaggedSchemasInParameter)
+        .flatMap(findTaggedSchemasInParameter),
     );
   }
 
@@ -167,7 +169,7 @@ function findTaggedSchemasInPathItem(
 }
 
 export function findTaggedSchemas(
-  oas: OpenAPIObject
+  oas: OpenAPIObject,
 ): Array<TaggedSchemaObject> {
   oas.components = oas.components ?? {};
   oas.components.schemas = oas.components.schemas ?? {};
@@ -178,7 +180,7 @@ export function findTaggedSchemas(
 
   const rootSchemas: Array<TaggedSchemaObject> = [
     ...Object.values(oas.components.schemas).flatMap(
-      findTaggedSchemasInSchemas
+      findTaggedSchemasInSchemas,
     ),
   ];
 
@@ -188,7 +190,7 @@ export function findTaggedSchemas(
   // now let's handle our other components
   rootSchemas.push(
     ...Object.values(oas.components.callbacks).flatMap(
-      findTaggedSchemasInCallbacks
+      findTaggedSchemasInCallbacks,
     ),
     ...Object.values(oas.components.requestBodies)
       .filter(isNotReferenceObject)
@@ -198,7 +200,7 @@ export function findTaggedSchemas(
       .flatMap(findTaggedSchemasInResponse),
     ...Object.values(oas.components.parameters)
       .filter(isNotReferenceObject)
-      .flatMap(findTaggedSchemasInParameter)
+      .flatMap(findTaggedSchemasInParameter),
   );
 
   return rootSchemas.flatMap(findTaggedSchemasInSchemas);

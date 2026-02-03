@@ -1,14 +1,14 @@
 import "../extensions.js";
 
 import Fastify, {
-  type FastifyServerOptions,
   type FastifyInstance,
+  type FastifyServerOptions,
 } from "fastify";
 import { type Static, type TStringOptions, Type } from "typebox";
 import { describe, expect, test } from "vitest";
 
 import { oas3PluginAjv, schemaType } from "../index.js";
-import { oas3Plugin, type OAS3PluginOptions } from "../plugin.js";
+import { type OAS3PluginOptions, oas3Plugin } from "../plugin.js";
 
 const fastifyOpts: FastifyServerOptions = {
   logger: { level: "error" },
@@ -28,13 +28,13 @@ const pluginOpts: OAS3PluginOptions = {
 
 const PingResponse = schemaType(
   "PingResponse",
-  Type.Object({ pong: Type.Boolean() })
+  Type.Object({ pong: Type.Boolean() }),
 );
 type PingResponse = Static<typeof PingResponse>;
 
 export function StringEnum<T extends string[]>(
   values: [...T],
-  options?: TStringOptions
+  options?: TStringOptions,
 ) {
   return Type.Unsafe<T[number]>({ ...Type.String(options), enum: values });
 }
@@ -45,14 +45,14 @@ const AsdfChoiceModel = schemaType(
   "AsdfChoiceModel",
   Type.Object({
     choice: AsdfModel,
-  })
+  }),
 );
 
 const AsdfChoiceWrapperModel = schemaType(
   "AsdfChoiceWrapperModel",
   Type.Object({
     wrapper: AsdfChoiceModel,
-  })
+  }),
 );
 
 describe("StringEnum", () => {
@@ -128,14 +128,14 @@ describe("StringEnum", () => {
       "StringChoiceModel",
       Type.Object({
         choice: StringModel,
-      })
+      }),
     );
 
     const StringChoiceWrapperModel = schemaType(
       "StringChoiceWrapperModel",
       Type.Object({
         wrapper: StringChoiceModel,
-      })
+      }),
     );
 
     await fastify.register(async (fastify: FastifyInstance) => {
@@ -323,7 +323,7 @@ describe("StringEnum", () => {
     expect(invalidResponse.statusCode).toBe(400);
     const errorBody = JSON.parse(invalidResponse.body);
     expect(errorBody.message).toMatch(
-      /must be equal to one of the allowed values/
+      /must be equal to one of the allowed values/,
     );
 
     // Validate OpenAPI schema generation

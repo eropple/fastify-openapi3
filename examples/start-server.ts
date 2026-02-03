@@ -5,19 +5,19 @@ import Fastify, {
 } from "fastify";
 
 import OAS3Plugin, {
-  oas3PluginAjv,
   type OAS3PluginOptions,
+  oas3PluginAjv,
   schemaType,
 } from "../src/index.js";
 
 const QwopModel = schemaType(
   "QwopRequestBody",
-  Type.Object({ qwop: Type.Number() })
+  Type.Object({ qwop: Type.Number() }),
 );
 type QwopModel = Static<typeof QwopModel>;
 const PingResponse = schemaType(
   "PingResponse",
-  Type.Object({ pong: Type.Boolean() })
+  Type.Object({ pong: Type.Boolean() }),
 );
 type PingResponse = Static<typeof PingResponse>;
 
@@ -92,7 +92,7 @@ const run = async () => {
         },
       });
     },
-    { prefix: "/api" }
+    { prefix: "/api" },
   );
 
   // const port = Math.floor(Math.random() * 10000) + 10000;

@@ -26,19 +26,18 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { type TSchema, type TSchemaOptions, type Static } from "typebox";
-import { Value } from "typebox/value";
+import type { Static, TSchema, TSchemaOptions } from "typebox";
 
 export interface UnionOneOf<T extends TSchema[]> extends TSchema {
   "~kind": "UnionOneOf";
-  "static": { [K in keyof T]: Static<T[K]> }[number];
-  "oneOf": T;
+  static: { [K in keyof T]: Static<T[K]> }[number];
+  oneOf: T;
 }
 
 /** Creates a Union type with a `oneOf` schema representation */
 export function UnionOneOf<T extends TSchema[]>(
   oneOf: [...T],
-  options: TSchemaOptions = {}
+  options: TSchemaOptions = {},
 ) {
   return { ...options, "~kind": "UnionOneOf", oneOf } as UnionOneOf<T>;
 }

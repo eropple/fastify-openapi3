@@ -1,32 +1,20 @@
-import {
-  type FastifyBaseLogger,
-  type RouteOptions,
-  type FastifyRequest,
-} from "fastify";
-import { type preValidationMetaHookHandler } from "fastify/types/hooks.js";
-import { type OpenApiBuilder } from "openapi3-ts";
+import type { FastifyBaseLogger, RouteOptions } from "fastify";
+import type { preValidationMetaHookHandler } from "fastify/types/hooks.js";
+import type { OpenApiBuilder } from "openapi3-ts";
 
 import { OAS3PluginError } from "../errors.js";
 
 import { buildSecurityHookHandler } from "./hook-handler-builder.js";
-import {
-  type WrappedHandler,
-  type HandlerRetval,
-  buildApiKeyHandler,
-  buildHttpBasicHandler,
-  buildHttpBearerHandler,
-} from "./types/handlers.js";
-import {
-  type OAS3RouteSecuritySchemeSpec,
-  type OAS3AutowireSecurityOptions,
-  type OAS3PluginSecurityScheme,
+import type {
+  OAS3AutowireSecurityOptions,
+  OAS3PluginSecurityScheme,
 } from "./types/index.js";
 
 export * from "./types/index.js";
 
 export function validateOptions(
   logger: FastifyBaseLogger,
-  options: OAS3AutowireSecurityOptions | undefined
+  options: OAS3AutowireSecurityOptions | undefined,
 ) {
   if (!options || options.disabled) {
     logger.info("OAS plugin autowire is disabled.");
@@ -45,7 +33,7 @@ export function validateOptions(
       const msg = `Security scheme type "${scheme.type}" is not supported. Consider using "bearer" or "apiKey" instead.`;
 
       if (options.allowUnrecognizedSecurity) {
-        logger.warn({ securitySchemeName: name }, msg + " Ignoring.");
+        logger.warn({ securitySchemeName: name }, `${msg} Ignoring.`);
       } else {
         throw new OAS3PluginError(msg);
       }
@@ -69,7 +57,7 @@ export function validateOptions(
 export function attachSecuritySchemesToDocument(
   logger: FastifyBaseLogger,
   doc: OpenApiBuilder,
-  options: OAS3AutowireSecurityOptions
+  options: OAS3AutowireSecurityOptions,
 ) {
   for (const [name, scheme] of Object.entries(options.securitySchemes)) {
     const sanitized: Omit<OAS3PluginSecurityScheme, "fn"> & { fn?: unknown } = {
@@ -92,7 +80,7 @@ export function attachSecurityToRoute(
   rLog: FastifyBaseLogger,
   route: RouteOptions,
   options: OAS3AutowireSecurityOptions,
-  hookCache: Record<string, preValidationMetaHookHandler>
+  hookCache: Record<string, preValidationMetaHookHandler>,
 ) {
   if (options.disabled) {
     rLog.trace("Autowire disabled; skipping.");
@@ -114,7 +102,7 @@ export function attachSecurityToRoute(
   if (!security) {
     if (!options.allowEmptySecurityWithNoRoot) {
       throw new OAS3PluginError(
-        `Route ${route.method} ${route.url} has no security defined, and rootSecurity is not defined. If this is intentional, set \`allowEmptySecurityWithNoRoot\` to true.`
+        `Route ${route.method} ${route.url} has no security defined, and rootSecurity is not defined. If this is intentional, set \`allowEmptySecurityWithNoRoot\` to true.`,
       );
     }
     rLog.debug("No security defined at any level; skipping.");
@@ -141,7 +129,7 @@ export function attachSecurityToRoute(
   ];
   if (Array.isArray(existingPreValidationHooks)) {
     newPreValidationHooks.push(
-      ...existingPreValidationHooks.filter((f) => f !== hookHandler)
+      ...existingPreValidationHooks.filter((f) => f !== hookHandler),
     );
   }
 
@@ -150,7 +138,7 @@ export function attachSecurityToRoute(
       routeHookCount: newPreValidationHooks.length,
       securitySchemes: security,
     },
-    "Adding security hook to route."
+    "Adding security hook to route.",
   );
 
   route.preValidation = newPreValidationHooks;

@@ -1,4 +1,4 @@
-import { type OpenAPIObject } from "openapi3-ts";
+import type { OpenAPIObject } from "openapi3-ts";
 
 import { isTaggedSchema } from "../util.js";
 
@@ -14,7 +14,7 @@ import { fixupSpecSchemaRefs } from "./fixup.js";
  * passed in) or pass an entirely new schema object, at your discretion.
  */
 export type OASTransformFunction = (
-  oas: OpenAPIObject
+  oas: OpenAPIObject,
 ) => OpenAPIObject | Promise<OpenAPIObject>;
 
 /**

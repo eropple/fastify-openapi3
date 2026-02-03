@@ -1,8 +1,4 @@
-import {
-  type OpenAPIObject,
-  type OperationObject,
-  type SchemaObject,
-} from "openapi3-ts";
+import type { OpenAPIObject, OperationObject, SchemaObject } from "openapi3-ts";
 import { Type } from "typebox";
 import { describe, expect, test } from "vitest";
 
@@ -19,26 +15,26 @@ const typeB = schemaType(
   "MyTypeB",
   Type.Object({
     foo: Type.Boolean(),
-  })
+  }),
 );
 const typeC = schemaType(
   "MyTypeC",
   Type.Object({
     a: typeA,
     b: typeB,
-  })
+  }),
 );
 
 const typeWithArray = schemaType(
   "TypeWithArray",
   Type.Object({
     arr: Type.Array(typeA),
-  })
+  }),
 );
 
 const oneOfType = schemaType(
   "OneOfType",
-  UnionOneOf([Type.Literal("a"), Type.Literal("b")])
+  UnionOneOf([Type.Literal("a"), Type.Literal("b")]),
 );
 
 const oneOfType2 = schemaType("OneOfType2", UnionOneOf([typeA, typeB, typeC]));
@@ -241,6 +237,56 @@ describe("tagged schema finder", () => {
   // TODO: test for callback
   // I'm confident it works (as it duplicates request body syntax), but we should have
   // a test for completeness.
+
+  test("handles Type.Any() (empty schema {}) without throwing", () => {
+    // Type.Any() produces {} which is valid in OAS 3.1 (means "any value")
+    const typeWithAny = schemaType(
+      "TypeWithAny",
+      Type.Object({
+        data: Type.Any(),
+      }),
+    );
+
+    const oas: OpenAPIObject = {
+      ...baseOas,
+      components: {
+        schemas: {
+          TypeWithAny: typeWithAny,
+        },
+      },
+    };
+
+    // Should not throw - empty schemas are valid in OAS 3.1
+    expect(() => findTaggedSchemas(oas)).not.toThrow();
+
+    const schemaKeys = [
+      ...new Set([
+        ...findTaggedSchemas(oas).map((s) => s[SCHEMA_NAME_PROPERTY]),
+      ]),
+    ];
+    expect(schemaKeys).toHaveLength(1); // Just TypeWithAny, not the nested Any
+  });
+
+  test("handles Type.Unknown() (empty schema {}) without throwing", () => {
+    // Type.Unknown() also produces {} which is valid in OAS 3.1
+    const typeWithUnknown = schemaType(
+      "TypeWithUnknown",
+      Type.Object({
+        payload: Type.Unknown(),
+      }),
+    );
+
+    const oas: OpenAPIObject = {
+      ...baseOas,
+      components: {
+        schemas: {
+          TypeWithUnknown: typeWithUnknown,
+        },
+      },
+    };
+
+    expect(() => findTaggedSchemas(oas)).not.toThrow();
+  });
 });
 
 describe("schema canonicalization", () => {
@@ -309,10 +355,10 @@ describe("schema fixup", () => {
       schema: { $ref: "#/components/schemas/MyTypeB" },
     });
     expect(
-      (oas?.components?.schemas?.["MyTypeC"] as SchemaObject)?.properties?.["a"]
+      (oas?.components?.schemas?.MyTypeC as SchemaObject)?.properties?.a,
     ).toEqual({ $ref: "#/components/schemas/MyTypeA" });
     expect(
-      (oas?.components?.schemas?.["MyTypeC"] as SchemaObject)?.properties?.["b"]
+      (oas?.components?.schemas?.MyTypeC as SchemaObject)?.properties?.b,
     ).toEqual({ $ref: "#/components/schemas/MyTypeB" });
   });
 });

@@ -1,6 +1,6 @@
 import { SCHEMA_NAME_PROPERTY } from "../constants.js";
 
-import { type TaggedSchemaObject } from "./oas-helpers.js";
+import type { TaggedSchemaObject } from "./oas-helpers.js";
 
 /**
  * Recursive function to untangle all these schemas.
@@ -17,12 +17,12 @@ import { type TaggedSchemaObject } from "./oas-helpers.js";
 function canonicalizeSchema(
   current: TaggedSchemaObject,
   completed: Record<string, TaggedSchemaObject>,
-  seenSet: Set<symbol>
+  seenSet: Set<symbol>,
 ) {
   const tag = current[SCHEMA_NAME_PROPERTY];
   if (!tag) {
     throw new Error(
-      `Should never happen - tagged schema w/o tag? ${JSON.stringify(current)}`
+      `Should never happen - tagged schema w/o tag? ${JSON.stringify(current)}`,
     );
   }
   if (!tag.description || tag.description.length < 1) {
@@ -47,7 +47,7 @@ function canonicalizeSchema(
 
         ${JSON.stringify(existing)}
 
-        ${JSON.stringify(current)}`
+        ${JSON.stringify(current)}`,
       );
     }
 
@@ -63,7 +63,7 @@ function canonicalizeSchema(
 }
 
 export function canonicalizeSchemas(
-  schemas: Array<TaggedSchemaObject>
+  schemas: Array<TaggedSchemaObject>,
 ): Record<string, TaggedSchemaObject> {
   const canonicalizedSchemas: Record<string, TaggedSchemaObject> = {};
   const seenSet = new Set<symbol>();

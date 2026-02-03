@@ -1,14 +1,14 @@
 import OpenAPISchemaValidator from "@seriousme/openapi-schema-validator";
-import { type RouteOptions } from "fastify";
-import { type preValidationMetaHookHandler } from "fastify/types/hooks.js";
+import type { RouteOptions } from "fastify";
+import type { preValidationMetaHookHandler } from "fastify/types/hooks.js";
 import { fastifyPlugin } from "fastify-plugin";
 import * as YAML from "js-yaml";
 import { cloneDeep } from "lodash-es";
 import {
   OpenApiBuilder,
-  type SecurityRequirementObject,
   type OperationObject,
   type PathItemObject,
+  type SecurityRequirementObject,
 } from "openapi3-ts";
 import { Type } from "typebox";
 
@@ -20,10 +20,7 @@ import {
 import { APPLICATION_JSON } from "./constants.js";
 import { OAS3PluginOptionsError, OAS3SpecValidationError } from "./errors.js";
 import { defaultOperationIdFn } from "./operation-helpers.js";
-import {
-  type OAS3PluginOptions,
-  type OAS3PluginPublishOptions,
-} from "./options.js";
+import type { OAS3PluginOptions, OAS3PluginPublishOptions } from "./options.js";
 import { convertFastifyToOpenAPIPath } from "./path-converter.js";
 import { canonicalizeAnnotatedSchemas } from "./spec-transforms/index.js";
 import { rapidocSkeleton } from "./ui/rapidoc.js";
@@ -89,7 +86,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
           rLog,
           route,
           options.autowiredSecurity,
-          hookCache
+          hookCache,
         );
       }
     });
@@ -101,7 +98,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
         let documentSecurity: SecurityRequirementObject[] | undefined;
         if (options.autowiredSecurity?.rootSecurity) {
           documentSecurity = Array.isArray(
-            options.autowiredSecurity.rootSecurity
+            options.autowiredSecurity.rootSecurity,
           )
             ? options.autowiredSecurity.rootSecurity
             : [options.autowiredSecurity.rootSecurity];
@@ -135,7 +132,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
           const oasConvertedUrl = convertFastifyToOpenAPIPath(route.url);
           rLog.info(
             { oasUrl: oasConvertedUrl.url },
-            "Building operation for route."
+            "Building operation for route.",
           );
 
           const oas = route.oas;
@@ -174,7 +171,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
               rLog.debug("Adding request body to operation.");
               if (!Type.IsSchema(body)) {
                 rLog.warn(
-                  "Route has a request body that is not a schema. Skipping."
+                  "Route has a request body that is not a schema. Skipping.",
                 );
               } else {
                 const oasRequestBody = oas?.body;
@@ -206,7 +203,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
 
               if (!isObjectSchema) {
                 rLog.warn(
-                  "Route has a querystring that is not a schema. Skipping."
+                  "Route has a querystring that is not a schema. Skipping.",
                 );
               } else {
                 operation.parameters = operation.parameters ?? [];
@@ -214,25 +211,25 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 if ((querystring as any).additionalProperties) {
                   rLog.warn(
-                    "Route's querystring has additionalProperties. This will be ignored."
+                    "Route's querystring has additionalProperties. This will be ignored.",
                   );
                 }
 
                 const routeQsExtras = route.oas?.querystring ?? {};
                 /* eslint-disable @typescript-eslint/no-explicit-any */
                 const qsEntries = Object.entries(
-                  (querystring as any).properties ?? {}
+                  (querystring as any).properties ?? {},
                 );
                 /* eslint-enable @typescript-eslint/no-explicit-any */
 
                 const unmatchedExtras = findMissingEntries(
                   routeQsExtras,
-                  qsEntries
+                  qsEntries,
                 );
                 if (unmatchedExtras.length > 0) {
                   rLog.warn(
                     { unmatchedExtras },
-                    `Route's querystring has extra properties. These will be ignored: ${unmatchedExtras.join(", ")}`
+                    `Route's querystring has extra properties. These will be ignored: ${unmatchedExtras.join(", ")}`,
                   );
                 }
 
@@ -281,25 +278,25 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 if ((params as any).additionalProperties) {
                   rLog.warn(
-                    "Route's params has additionalProperties. This will be ignored."
+                    "Route's params has additionalProperties. This will be ignored.",
                   );
                 }
 
                 const routeParamsExtras = route.oas?.params ?? {};
                 /* eslint-disable @typescript-eslint/no-explicit-any */
                 const paramsEntries = Object.entries(
-                  (params as any).properties ?? {}
+                  (params as any).properties ?? {},
                 );
                 /* eslint-enable @typescript-eslint/no-explicit-any */
 
                 const unmatchedExtras = findMissingEntries(
                   routeParamsExtras,
-                  paramsEntries
+                  paramsEntries,
                 );
                 if (unmatchedExtras.length > 0) {
                   rLog.warn(
                     { unmatchedExtras },
-                    `Route's params has extra properties. These will be ignored: ${unmatchedExtras.join(", ")}`
+                    `Route's params has extra properties. These will be ignored: ${unmatchedExtras.join(", ")}`,
                   );
                 }
 
@@ -311,7 +308,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
                     /* eslint-enable @typescript-eslint/no-explicit-any */
                     rLog.warn(
                       { paramKey },
-                      `Route's param is marked as not required. This will be ignored.`
+                      `Route's param is marked as not required. This will be ignored.`,
                     );
                   }
 
@@ -340,7 +337,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
                   !/^[1-5][0-9]{2}/.test(responseCode.toString())
                 ) {
                   rLog.warn(
-                    `Route has a response schema of code '${responseCode}', which OAS3Plugin does not support.`
+                    `Route has a response schema of code '${responseCode}', which OAS3Plugin does not support.`,
                   );
                   continue;
                 }
@@ -365,7 +362,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
 
           if (oas?.vendorPrefixedFields) {
             for (const [key, value] of Object.entries(
-              oas.vendorPrefixedFields
+              oas.vendorPrefixedFields,
             )) {
               operation[key] = value;
             }
@@ -398,7 +395,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
           attachSecuritySchemesToDocument(
             pLog,
             builder,
-            options.autowiredSecurity
+            options.autowiredSecurity,
           );
         }
 
@@ -415,7 +412,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
           if (options.exitOnInvalidDocument) {
             pLog.error(
               { openApiErrors: result.errors },
-              "Errors in OpenAPI validation."
+              "Errors in OpenAPI validation.",
             );
             if (options.printSpecificationOnValidationFailure) {
               pLog.info({ openapiDoc: doc });
@@ -425,7 +422,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
 
           pLog.warn(
             { openApiErrors: result.errors },
-            "Errors in OpenAPI validation."
+            "Errors in OpenAPI validation.",
           );
         }
 
@@ -456,7 +453,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
             .header("Content-Type", "application/json; charset=utf-8")
             .header("Content-Disposition", "inline")
             .send(jsonContent);
-        }
+        },
       );
     }
 
@@ -477,7 +474,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
             .header("Content-Type", "application/x-yaml; charset=utf-8")
             .header("Content-Disposition", "inline")
             .send(yamlContent);
-        }
+        },
       );
     }
 
@@ -498,7 +495,7 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
                 .code(200)
                 .header("Content-Type", "text/html")
                 .send(rapidocContent);
-            }
+            },
           );
           break;
         }
@@ -521,5 +518,5 @@ export const oas3Plugin = fastifyPlugin<OAS3PluginOptions>(
       }
     }
   },
-  "5.x"
+  "5.x",
 );

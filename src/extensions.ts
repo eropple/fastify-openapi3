@@ -2,11 +2,11 @@ import "fastify";
 import "openapi3-ts";
 import "typebox";
 
-import { type FastifySchema } from "fastify";
+import type { FastifySchema } from "fastify";
 import type { OpenAPIObject } from "openapi3-ts";
-import { type TSchema } from "typebox";
+import type { TSchema } from "typebox";
 
-import { type HandlerRetval } from "./autowired-security/types/handlers.js";
+import type { HandlerRetval } from "./autowired-security/types/handlers.js";
 import type { OAS3ResponseTable, OAS3RouteOptions } from "./options.js";
 import type { TaggedSchema } from "./schemas.js";
 

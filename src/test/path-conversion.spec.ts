@@ -23,8 +23,8 @@ describe("convertFastifyToOpenAPIPath", () => {
     });
     expect(
       convertFastifyToOpenAPIPath(
-        "/api/v1/products/:productId/reviews/:reviewId"
-      )
+        "/api/v1/products/:productId/reviews/:reviewId",
+      ),
     ).toEqual({
       url: "/api/v1/products/{productId}/reviews/{reviewId}",
       paramPatterns: {},
@@ -34,13 +34,13 @@ describe("convertFastifyToOpenAPIPath", () => {
   // Test paths with regex patterns
   test("should convert regex patterns to OpenAPI style parameters", () => {
     expect(
-      convertFastifyToOpenAPIPath("/user/:action(profile|settings)")
+      convertFastifyToOpenAPIPath("/user/:action(profile|settings)"),
     ).toEqual({
       url: "/user/{action}",
       paramPatterns: { action: "profile|settings" },
     });
     expect(
-      convertFastifyToOpenAPIPath("/api/v:version(\\d+)/users/:userId")
+      convertFastifyToOpenAPIPath("/api/v:version(\\d+)/users/:userId"),
     ).toEqual({
       url: "/api/v{version}/users/{userId}",
       paramPatterns: { version: "\\d+" },
@@ -51,8 +51,8 @@ describe("convertFastifyToOpenAPIPath", () => {
   test("should handle multiple regex patterns in a single path", () => {
     expect(
       convertFastifyToOpenAPIPath(
-        "/api/:apiVersion(v1|v2)/:resource/:id(\\d+)-:status([a-z]+)"
-      )
+        "/api/:apiVersion(v1|v2)/:resource/:id(\\d+)-:status([a-z]+)",
+      ),
     ).toEqual({
       url: "/api/{apiVersion}/{resource}/{id}-{status}",
       paramPatterns: {
@@ -66,7 +66,7 @@ describe("convertFastifyToOpenAPIPath", () => {
   // Test paths with regex patterns and simple parameters
   test("should handle a mix of regex patterns and simple parameters", () => {
     expect(
-      convertFastifyToOpenAPIPath("/:resource/:id(\\d+)-:status/:category")
+      convertFastifyToOpenAPIPath("/:resource/:id(\\d+)-:status/:category"),
     ).toEqual({
       url: "/{resource}/{id}-{status}/{category}",
       paramPatterns: { id: "\\d+" },
@@ -95,7 +95,7 @@ describe("convertFastifyToOpenAPIPath", () => {
 
     // Path with a regex at the start
     expect(
-      convertFastifyToOpenAPIPath(":userType(admin|user)/:role/dashboard")
+      convertFastifyToOpenAPIPath(":userType(admin|user)/:role/dashboard"),
     ).toEqual({
       url: "{userType}/{role}/dashboard",
       paramPatterns: { userType: "admin|user" },
@@ -105,7 +105,7 @@ describe("convertFastifyToOpenAPIPath", () => {
   // Test paths with special characters in regex
   test("should handle paths with special characters in regex", () => {
     expect(
-      convertFastifyToOpenAPIPath("/user/:username([a-zA-Z0-9_-]+)")
+      convertFastifyToOpenAPIPath("/user/:username([a-zA-Z0-9_-]+)"),
     ).toEqual({
       url: "/user/{username}",
       paramPatterns: { username: "[a-zA-Z0-9_-]+" },

@@ -21,7 +21,7 @@ export class OAS3SpecValidationError extends OAS3PluginError {
 export class OAS3RequestError extends Error {
   constructor(
     message: string,
-    readonly statusCode: number
+    readonly statusCode: number,
   ) {
     super(message);
   }

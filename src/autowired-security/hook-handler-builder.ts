@@ -1,27 +1,22 @@
-import { type FastifyBaseLogger } from "fastify";
-import {
-  type onRequestAsyncHookHandler,
-  type onRequestMetaHookHandler,
+import type { FastifyBaseLogger } from "fastify";
+import type {
+  onRequestAsyncHookHandler,
+  onRequestMetaHookHandler,
 } from "fastify/types/hooks.js";
 
-import {
-  OAS3PluginError,
-  OAS3RequestBadRequestError,
-  OAS3RequestForbiddenError,
-  OAS3RequestUnauthorizedError,
-} from "../errors.js";
+import { OAS3PluginError } from "../errors.js";
 
 import {
-  type HandlerRetval,
-  type WrappedHandler,
   buildApiKeyHandler,
   buildHttpBasicHandler,
   buildHttpBearerHandler,
+  type HandlerRetval,
+  type WrappedHandler,
 } from "./types/handlers.js";
-import {
-  type OAS3RouteSecuritySchemeSpec,
-  type OAS3AutowireSecurityOptions,
-  type OAS3AutowireRequestFailedHandler,
+import type {
+  OAS3AutowireRequestFailedHandler,
+  OAS3AutowireSecurityOptions,
+  OAS3RouteSecuritySchemeSpec,
 } from "./types/index.js";
 
 type AndedHandlers = Array<[string, WrappedHandler]>;
@@ -30,7 +25,7 @@ type OrredHandlers = Array<AndedHandlers>;
 export function buildSecurityHookHandler(
   rLog: FastifyBaseLogger,
   security: Array<OAS3RouteSecuritySchemeSpec>,
-  options: OAS3AutowireSecurityOptions
+  options: OAS3AutowireSecurityOptions,
 ): onRequestMetaHookHandler {
   // `security` is an array of objects. the keys of the sub-object are security scheme names.
   // the values of the sub-object are arrays of security scopes. until we implement OIDC/OAuth2,
@@ -49,13 +44,13 @@ export function buildSecurityHookHandler(
       if (!scheme) {
         rLog.warn(
           { securitySchemeName: name },
-          "Unrecognized security scheme."
+          "Unrecognized security scheme.",
         );
         if (!options.allowUnrecognizedSecurity) {
           throw new OAS3PluginError(`Security scheme "${name}" not defined.`);
         } else {
           rLog.warn(
-            "Ignoring unrecognized security scheme; it is on you to implement it."
+            "Ignoring unrecognized security scheme; it is on you to implement it.",
           );
           continue;
         }
@@ -96,7 +91,7 @@ export function buildSecurityHookHandler(
 const defaultFailHandler: OAS3AutowireRequestFailedHandler = (
   result,
   request,
-  reply
+  reply,
 ) => {
   if (result.code === 401) {
     reply.code(401).send({ error: "Unauthorized" });
@@ -105,7 +100,7 @@ const defaultFailHandler: OAS3AutowireRequestFailedHandler = (
   } else {
     request.log.error(
       { handlerRetval: result },
-      "Out-of-domain value from security handlers."
+      "Out-of-domain value from security handlers.",
     );
     reply.code(500).send({ error: "Internal server error" });
   }
@@ -114,7 +109,7 @@ const defaultFailHandler: OAS3AutowireRequestFailedHandler = (
 function buildSecurityHandlerFunction(
   rLog: FastifyBaseLogger,
   orredHandlers: OrredHandlers,
-  options: OAS3AutowireSecurityOptions
+  options: OAS3AutowireSecurityOptions,
 ): onRequestAsyncHookHandler {
   const failHandler: OAS3AutowireRequestFailedHandler =
     options.onRequestFailed ?? defaultFailHandler;
@@ -160,7 +155,7 @@ function buildSecurityHandlerFunction(
                 handlerGroupIndex,
                 securitySchemeName: name,
               },
-              "Security scheme denied request."
+              "Security scheme denied request.",
             );
             andRetvals.push(result);
             allSucceeded = false;
@@ -169,7 +164,7 @@ function buildSecurityHandlerFunction(
         } catch (err) {
           hLog.error(
             { err },
-            `Security handler '${name}' threw an error: ${err}`
+            `Security handler '${name}' threw an error: ${err}`,
           );
           allSucceeded = false;
           break;
@@ -189,13 +184,13 @@ function buildSecurityHandlerFunction(
     } else {
       request.log.debug("All security handlers failed for route.");
       const isForbidden = andRetvals.some(
-        (r) => r.ok === false && r.code === 403
+        (r) => r.ok === false && r.code === 403,
       );
 
       return failHandler(
         { ok: false, code: isForbidden ? 403 : 401 },
         request,
-        reply
+        reply,
       );
     }
   };

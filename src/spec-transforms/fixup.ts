@@ -8,13 +8,13 @@ import {
   type SchemaObject,
 } from "openapi3-ts";
 
-import { APPLICATION_JSON, SCHEMA_NAME_PROPERTY } from "../constants.js";
-import { type TaggedSchema } from "../schemas.js";
+import { SCHEMA_NAME_PROPERTY } from "../constants.js";
+import type { TaggedSchema } from "../schemas.js";
 import { isNotReferenceObject, isTaggedSchema } from "../util.js";
 
 import {
-  mapPathItems,
   type MaybeSchemaHolder,
+  mapPathItems,
   operations,
 } from "./oas-helpers.js";
 
@@ -110,7 +110,7 @@ function fixupPathItems(p: PathItemObject) {
           const content = resp?.content ?? {};
 
           for (const [_mediaType, responseContent] of Object.entries(
-            content ?? {}
+            content ?? {},
           )) {
             if (responseContent) {
               fixupSchemaHolder(responseContent);
@@ -125,7 +125,7 @@ function fixupPathItems(p: PathItemObject) {
       .filter(isNotReferenceObject)
       .forEach((cbs) =>
         // again with the gross reentrancy
-        (Object.values(cbs) as Array<PathItemObject>).forEach(fixupPathItems)
+        (Object.values(cbs) as Array<PathItemObject>).forEach(fixupPathItems),
       );
   });
 }
