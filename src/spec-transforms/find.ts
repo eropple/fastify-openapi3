@@ -36,8 +36,12 @@ function findTaggedSchemasInSchemas(
   //        if they're nested. This isn't the worst thing in the world, because
   //        they get deduplicated later and we are not dealing with large N here,
   //        but it does add time to plugin startup.
-  if (isFalsy(s.type) && !s.allOf && !s.anyOf && !s.oneOf) {
-    throw new Error(`Schema object has no type: ${JSON.stringify(s)}`);
+
+  // Empty schemas {} are valid in OAS 3.1 (JSON Schema 2020-12) and mean "any value".
+  // TypeBox's Type.Any() and Type.Unknown() both produce {}.
+  // These schemas have no nested content to search, so return early.
+  if (isFalsy(s.type) && !s.allOf && !s.anyOf && !s.oneOf && !s.properties) {
+    return isTaggedSchema(s) ? [s] : [];
   }
 
   const ret = [

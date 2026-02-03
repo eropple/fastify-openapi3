@@ -241,6 +241,56 @@ describe("tagged schema finder", () => {
   // TODO: test for callback
   // I'm confident it works (as it duplicates request body syntax), but we should have
   // a test for completeness.
+
+  test("handles Type.Any() (empty schema {}) without throwing", () => {
+    // Type.Any() produces {} which is valid in OAS 3.1 (means "any value")
+    const typeWithAny = schemaType(
+      "TypeWithAny",
+      Type.Object({
+        data: Type.Any(),
+      })
+    );
+
+    const oas: OpenAPIObject = {
+      ...baseOas,
+      components: {
+        schemas: {
+          TypeWithAny: typeWithAny,
+        },
+      },
+    };
+
+    // Should not throw - empty schemas are valid in OAS 3.1
+    expect(() => findTaggedSchemas(oas)).not.toThrow();
+
+    const schemaKeys = [
+      ...new Set([
+        ...findTaggedSchemas(oas).map((s) => s[SCHEMA_NAME_PROPERTY]),
+      ]),
+    ];
+    expect(schemaKeys).toHaveLength(1); // Just TypeWithAny, not the nested Any
+  });
+
+  test("handles Type.Unknown() (empty schema {}) without throwing", () => {
+    // Type.Unknown() also produces {} which is valid in OAS 3.1
+    const typeWithUnknown = schemaType(
+      "TypeWithUnknown",
+      Type.Object({
+        payload: Type.Unknown(),
+      })
+    );
+
+    const oas: OpenAPIObject = {
+      ...baseOas,
+      components: {
+        schemas: {
+          TypeWithUnknown: typeWithUnknown,
+        },
+      },
+    };
+
+    expect(() => findTaggedSchemas(oas)).not.toThrow();
+  });
 });
 
 describe("schema canonicalization", () => {
