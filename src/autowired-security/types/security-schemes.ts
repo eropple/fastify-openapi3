@@ -1,6 +1,6 @@
-import { type FastifyRequest } from "fastify";
+import type { FastifyRequest } from "fastify";
 
-import { type HandlerRetval } from "./handlers.js";
+import type { HandlerRetval } from "./handlers.js";
 
 /**
  * Context passed to security handlers that have `requiresParsedBody: true`.
@@ -18,12 +18,12 @@ export type SecurityHandlerContext = {
 export type ApiKeyHandlerFn = (
   value: string,
   request: FastifyRequest,
-  context?: SecurityHandlerContext
+  context?: SecurityHandlerContext,
 ) => HandlerRetval | Promise<HandlerRetval>;
 export type HttpBasicHandlerFn = (
   credentials: { username: string; password: string },
   request: FastifyRequest,
-  context?: SecurityHandlerContext
+  context?: SecurityHandlerContext,
 ) => HandlerRetval | Promise<HandlerRetval>;
 export type HttpBearerFn = ApiKeyHandlerFn;
 
@@ -34,12 +34,12 @@ export type HttpBearerFn = ApiKeyHandlerFn;
 export type NullableApiKeyHandlerFn = (
   value: string | null,
   request: FastifyRequest,
-  context?: SecurityHandlerContext
+  context?: SecurityHandlerContext,
 ) => HandlerRetval | Promise<HandlerRetval>;
 export type NullableHttpBasicHandlerFn = (
   credentials: { username: string; password: string } | null,
   request: FastifyRequest,
-  context?: SecurityHandlerContext
+  context?: SecurityHandlerContext,
 ) => HandlerRetval | Promise<HandlerRetval>;
 export type NullableHttpBearerFn = NullableApiKeyHandlerFn;
 

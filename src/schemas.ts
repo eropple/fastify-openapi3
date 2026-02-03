@@ -1,5 +1,5 @@
 import { pascalCase } from "change-case";
-import { type CustomOptions, type TSchema } from "typebox";
+import type { CustomOptions, TSchema } from "typebox";
 
 import { SCHEMA_NAME_PROPERTY } from "./constants.js";
 
@@ -33,7 +33,7 @@ export interface TaggedSchema {
  */
 export function schemaType<T extends TSchema & CustomOptions>(
   name: string,
-  type: T
+  type: T,
 ): T & TaggedSchema {
   // TypeBox 1.0: Preserve non-enumerable properties ~kind, ~readonly, ~optional
   // The spread operator strips these, so we copy them explicitly

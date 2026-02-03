@@ -1,15 +1,9 @@
-import { inspect } from "util";
-
-import Fastify, {
-  type FastifyInstance,
-  type FastifyServerOptions,
-} from "fastify";
-import { Type } from "typebox";
-import { describe, expect, test } from "vitest";
+import Fastify, { type FastifyServerOptions } from "fastify";
+import { expect, test } from "vitest";
 
 import { oas3PluginAjv } from "../ajv.js";
-import { type OAS3AutowireSecurityOptions } from "../autowired-security/index.js";
-import { type OAS3PluginOptions } from "../options.js";
+import type { OAS3AutowireSecurityOptions } from "../autowired-security/index.js";
+import type { OAS3PluginOptions } from "../options.js";
 import { oas3Plugin } from "../plugin.js";
 
 const fastifyOpts: FastifyServerOptions = {
@@ -56,7 +50,7 @@ test("operation with security but no root security works", async () => {
         security: { TestApiKey: [] },
       },
     },
-    async () => "ok"
+    async () => "ok",
   );
 
   await fastify.ready();
@@ -110,7 +104,7 @@ test("operation inherits root security when none specified", async () => {
     {
       oas: {}, // No security specified
     },
-    async () => "ok"
+    async () => "ok",
   );
 
   await fastify.ready();
@@ -161,7 +155,7 @@ test("operation can disable inherited root security", async () => {
         security: [], // Explicitly disable security
       },
     },
-    async () => "ok"
+    async () => "ok",
   );
 
   await fastify.ready();

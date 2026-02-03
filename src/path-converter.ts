@@ -4,7 +4,7 @@ type ConversionResult = {
 };
 
 export function convertFastifyToOpenAPIPath(
-  fastifyPath: string
+  fastifyPath: string,
 ): ConversionResult {
   let url = fastifyPath;
   const paramPatterns: Record<string, string> = {};

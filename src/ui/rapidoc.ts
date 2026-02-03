@@ -1,4 +1,4 @@
-import { type OpenAPIObject } from "openapi3-ts";
+import type { OpenAPIObject } from "openapi3-ts";
 
 export function rapidocSkeleton(document: OpenAPIObject): string {
   // this is a _little_ bonkers because we have to avoid accidental backticks.
@@ -21,7 +21,7 @@ export function rapidocSkeleton(document: OpenAPIObject): string {
       window.docEl = document.getElementById("RAPIDOC");
       window.specText = \`${JSON.stringify(document).replace(
         "`",
-        "_!@#$"
+        "_!@#$",
       )}\`.replace("_!@#$", "\`");
       window.spec = JSON.parse(window.specText);
       window.docEl.loadSpec(spec);

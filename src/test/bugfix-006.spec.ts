@@ -1,11 +1,11 @@
 import "../extensions.js";
 import Fastify, { type FastifyInstance } from "fastify";
-import { type SchemaObject } from "openapi3-ts";
+import type { SchemaObject } from "openapi3-ts";
 import { type Static, Type } from "typebox";
 import { describe, expect, test } from "vitest";
 
 import { APPLICATION_JSON } from "../constants.js";
-import { oas3Plugin, type OAS3PluginOptions } from "../plugin.js";
+import { type OAS3PluginOptions, oas3Plugin } from "../plugin.js";
 import { schemaType } from "../schemas.js";
 
 const pluginOpts: OAS3PluginOptions = {
@@ -19,13 +19,13 @@ describe("bug 006", () => {
   test("supports a response type with a nested object", async () => {
     const TestResponseInner = schemaType(
       "TestResponseInner",
-      Type.Object({ foo: Type.String() })
+      Type.Object({ foo: Type.String() }),
     );
     type TestResponseInner = Static<typeof TestResponseInner>;
 
     const TestResponse = schemaType(
       "TestResponse",
-      Type.Object({ bar: TestResponseInner })
+      Type.Object({ bar: TestResponseInner }),
     );
     type TestResponse = Static<typeof TestResponse>;
 
@@ -60,10 +60,10 @@ describe("bug 006", () => {
     expect(oas.components?.schemas?.TestResponseInner).toBeTruthy();
     expect(
       (oas.components?.schemas?.TestResponse as SchemaObject)?.properties?.bar
-        ?.$ref
+        ?.$ref,
     ).toEqual("#/components/schemas/TestResponseInner");
     expect(op?.responses?.["200"]?.content?.[APPLICATION_JSON]?.schema).toEqual(
-      { $ref: "#/components/schemas/TestResponse" }
+      { $ref: "#/components/schemas/TestResponse" },
     );
 
     const response = await fastify.inject({

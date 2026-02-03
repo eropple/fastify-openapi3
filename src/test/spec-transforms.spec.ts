@@ -1,8 +1,4 @@
-import {
-  type OpenAPIObject,
-  type OperationObject,
-  type SchemaObject,
-} from "openapi3-ts";
+import type { OpenAPIObject, OperationObject, SchemaObject } from "openapi3-ts";
 import { Type } from "typebox";
 import { describe, expect, test } from "vitest";
 
@@ -19,26 +15,26 @@ const typeB = schemaType(
   "MyTypeB",
   Type.Object({
     foo: Type.Boolean(),
-  })
+  }),
 );
 const typeC = schemaType(
   "MyTypeC",
   Type.Object({
     a: typeA,
     b: typeB,
-  })
+  }),
 );
 
 const typeWithArray = schemaType(
   "TypeWithArray",
   Type.Object({
     arr: Type.Array(typeA),
-  })
+  }),
 );
 
 const oneOfType = schemaType(
   "OneOfType",
-  UnionOneOf([Type.Literal("a"), Type.Literal("b")])
+  UnionOneOf([Type.Literal("a"), Type.Literal("b")]),
 );
 
 const oneOfType2 = schemaType("OneOfType2", UnionOneOf([typeA, typeB, typeC]));
@@ -248,7 +244,7 @@ describe("tagged schema finder", () => {
       "TypeWithAny",
       Type.Object({
         data: Type.Any(),
-      })
+      }),
     );
 
     const oas: OpenAPIObject = {
@@ -277,7 +273,7 @@ describe("tagged schema finder", () => {
       "TypeWithUnknown",
       Type.Object({
         payload: Type.Unknown(),
-      })
+      }),
     );
 
     const oas: OpenAPIObject = {
@@ -359,10 +355,10 @@ describe("schema fixup", () => {
       schema: { $ref: "#/components/schemas/MyTypeB" },
     });
     expect(
-      (oas?.components?.schemas?.["MyTypeC"] as SchemaObject)?.properties?.["a"]
+      (oas?.components?.schemas?.MyTypeC as SchemaObject)?.properties?.a,
     ).toEqual({ $ref: "#/components/schemas/MyTypeA" });
     expect(
-      (oas?.components?.schemas?.["MyTypeC"] as SchemaObject)?.properties?.["b"]
+      (oas?.components?.schemas?.MyTypeC as SchemaObject)?.properties?.b,
     ).toEqual({ $ref: "#/components/schemas/MyTypeB" });
   });
 });

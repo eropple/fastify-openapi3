@@ -1,12 +1,12 @@
-import { type FastifyRequest } from "fastify";
+import type { FastifyRequest } from "fastify";
 
 import { decodeBasicAuthHeader } from "../../util.js";
 
-import {
-  type ApiKeySecurityScheme,
-  type BasicAuthSecurityScheme,
-  type BearerSecurityScheme,
-  type SecurityHandlerContext,
+import type {
+  ApiKeySecurityScheme,
+  BasicAuthSecurityScheme,
+  BearerSecurityScheme,
+  SecurityHandlerContext,
 } from "./security-schemes.js";
 
 /**
@@ -22,14 +22,14 @@ export const HandlerRetvalReason = Object.freeze({
  * A wrapped handler to be used as a Fastify preValidation hook.
  */
 export type WrappedHandler = (
-  request: FastifyRequest
+  request: FastifyRequest,
 ) => HandlerRetval | Promise<HandlerRetval>;
 
 /**
  * ----- API Key Handler Builder -----
  */
 export function buildApiKeyHandler(
-  scheme: ApiKeySecurityScheme
+  scheme: ApiKeySecurityScheme,
 ): WrappedHandler {
   const schemeName = scheme.name.toLowerCase();
 
@@ -74,7 +74,7 @@ export function buildApiKeyHandler(
  * ----- HTTP Basic Handler Builder -----
  */
 export function buildHttpBasicHandler(
-  scheme: BasicAuthSecurityScheme
+  scheme: BasicAuthSecurityScheme,
 ): WrappedHandler {
   return (request) => {
     try {
@@ -113,7 +113,7 @@ export function buildHttpBasicHandler(
  * ----- HTTP Bearer Handler Builder -----
  */
 export function buildHttpBearerHandler(
-  scheme: BearerSecurityScheme
+  scheme: BearerSecurityScheme,
 ): WrappedHandler {
   return (request: FastifyRequest) => {
     try {

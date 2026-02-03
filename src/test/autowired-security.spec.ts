@@ -1,15 +1,12 @@
 import { fastifyCookie } from "@fastify/cookie";
-import Fastify, {
-  type FastifyInstance,
-  type FastifyServerOptions,
-} from "fastify";
+import Fastify, { type FastifyServerOptions } from "fastify";
 import fastifyRawBody from "fastify-raw-body";
 import { Type } from "typebox";
 import { describe, expect, test } from "vitest";
 
 import { oas3PluginAjv } from "../ajv.js";
-import { type OAS3AutowireSecurityOptions } from "../autowired-security/index.js";
-import { type OAS3PluginOptions } from "../options.js";
+import type { OAS3AutowireSecurityOptions } from "../autowired-security/index.js";
+import type { OAS3PluginOptions } from "../options.js";
 import { oas3Plugin } from "../plugin.js";
 
 const fastifyOpts: FastifyServerOptions = {
@@ -59,7 +56,7 @@ describe("autowired security", () => {
             method: "GET",
             path: "/openapi.json",
           })
-        ).body
+        ).body,
       );
 
       expect(jsonDoc.components.securitySchemes).toMatchObject({
@@ -95,7 +92,7 @@ describe("autowired security", () => {
         },
         async (request, reply) => {
           return "hi";
-        }
+        },
       );
 
       expect(async () => fastify.ready()).not.toThrow();
@@ -123,7 +120,7 @@ describe("autowired security", () => {
         },
         async (request, reply) => {
           return "hi";
-        }
+        },
       );
 
       expect(async () => fastify.ready()).not.toThrow();
@@ -134,7 +131,7 @@ describe("autowired security", () => {
             method: "GET",
             path: "/openapi.json",
           })
-        ).body
+        ).body,
       );
 
       expect(jsonDoc.paths["/boop"].get.security).toMatchObject([
@@ -160,7 +157,7 @@ describe("autowired security", () => {
         },
         async (request, reply) => {
           return "hi";
-        }
+        },
       );
 
       expect(async () => fastify.ready()).not.toThrow();
@@ -171,7 +168,7 @@ describe("autowired security", () => {
             method: "GET",
             path: "/openapi.json",
           })
-        ).body
+        ).body,
       );
 
       expect(jsonDoc.paths["/boop"].get.security).toMatchObject([
@@ -238,7 +235,7 @@ describe("autowired security", () => {
         },
         async (request, reply) => {
           return "hi";
-        }
+        },
       );
 
       expect(async () => fastify.ready()).not.toThrow();
@@ -278,7 +275,7 @@ describe("autowired security", () => {
           },
           async (request, reply) => {
             return "hello";
-          }
+          },
         );
 
         await fastify.ready();
@@ -328,7 +325,7 @@ describe("autowired security", () => {
           },
           async (request, reply) => {
             return "hello";
-          }
+          },
         );
 
         await fastify.ready();
@@ -339,7 +336,7 @@ describe("autowired security", () => {
               method: "GET",
               path: "/openapi.json",
             })
-          ).body
+          ).body,
         );
 
         expect(jsonDoc.components.securitySchemes).toMatchObject({
@@ -411,7 +408,7 @@ describe("autowired security", () => {
           },
           async (request, reply) => {
             return "hello";
-          }
+          },
         );
 
         await fastify.ready();
@@ -423,7 +420,7 @@ describe("autowired security", () => {
           method: "GET",
           path: "/boop",
           headers: {
-            Authorization: "Basic " + encodedGood,
+            Authorization: `Basic ${encodedGood}`,
           },
         });
 
@@ -433,7 +430,7 @@ describe("autowired security", () => {
           method: "GET",
           path: "/boop",
           headers: {
-            Authorization: "Basic " + encodedBad,
+            Authorization: `Basic ${encodedBad}`,
           },
         });
 
@@ -478,7 +475,7 @@ describe("autowired security", () => {
               },
             },
           },
-          async () => "hello"
+          async () => "hello",
         );
 
         await fastify.ready();
@@ -538,7 +535,7 @@ describe("autowired security", () => {
               },
             },
           },
-          async () => "hello"
+          async () => "hello",
         );
 
         await fastify.ready();
@@ -590,7 +587,7 @@ describe("autowired security", () => {
         },
         async (request, reply) => {
           return "hello";
-        }
+        },
       );
 
       await fastify.ready();
@@ -658,7 +655,7 @@ describe("autowired security", () => {
       },
       async (request, reply) => {
         return "hello";
-      }
+      },
     );
 
     await fastify.ready();
@@ -738,7 +735,7 @@ describe("autowired security", () => {
       },
       async (request, reply) => {
         return "hello";
-      }
+      },
     );
 
     await fastify.ready();
@@ -829,7 +826,7 @@ describe("autowired security", () => {
       },
       async (request, reply) => {
         return "hello";
-      }
+      },
     );
 
     await fastify.ready();
@@ -889,7 +886,7 @@ describe("autowired security", () => {
       },
       async (request, reply) => {
         return "hello";
-      }
+      },
     );
 
     await fastify.ready();
@@ -950,7 +947,7 @@ describe("autowired security", () => {
             schema: { response: { 200: Type.Object({}) } },
             oas: { security: { StrictApiKey: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -996,7 +993,7 @@ describe("autowired security", () => {
             schema: { response: { 200: Type.Object({}) } },
             oas: { security: { NullableApiKey: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1050,7 +1047,7 @@ describe("autowired security", () => {
             schema: { response: { 200: Type.Object({}) } },
             oas: { security: { StrictCookie: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1097,7 +1094,7 @@ describe("autowired security", () => {
             schema: { response: { 200: Type.Object({}) } },
             oas: { security: { NullableCookie: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1151,7 +1148,7 @@ describe("autowired security", () => {
             schema: { response: { 200: Type.Object({}) } },
             oas: { security: { StrictBasic: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1166,8 +1163,7 @@ describe("autowired security", () => {
           method: "GET",
           path: "/test",
           headers: {
-            Authorization:
-              "Basic " + Buffer.from("user:pass").toString("base64"),
+            Authorization: `Basic ${Buffer.from("user:pass").toString("base64")}`,
           },
         });
         expect(resValid.statusCode).toBe(200);
@@ -1200,7 +1196,7 @@ describe("autowired security", () => {
             schema: { response: { 200: Type.Object({}) } },
             oas: { security: { NullableBasic: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1215,8 +1211,7 @@ describe("autowired security", () => {
           method: "GET",
           path: "/test",
           headers: {
-            Authorization:
-              "Basic " + Buffer.from("user:pass").toString("base64"),
+            Authorization: `Basic ${Buffer.from("user:pass").toString("base64")}`,
           },
         });
         expect(resValid.statusCode).toBe(200);
@@ -1225,8 +1220,7 @@ describe("autowired security", () => {
           method: "GET",
           path: "/test",
           headers: {
-            Authorization:
-              "Basic " + Buffer.from("wrong:wrong").toString("base64"),
+            Authorization: `Basic ${Buffer.from("wrong:wrong").toString("base64")}`,
           },
         });
         expect(resInvalid.statusCode).toBe(401);
@@ -1260,7 +1254,7 @@ describe("autowired security", () => {
             schema: { response: { 200: Type.Object({}) } },
             oas: { security: { StrictBearer: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1305,7 +1299,7 @@ describe("autowired security", () => {
             schema: { response: { 200: Type.Object({}) } },
             oas: { security: { NullableBearer: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1336,7 +1330,7 @@ describe("autowired security", () => {
   describe("requiresParsedBody", () => {
     describe("API Key with body access", () => {
       test("handler receives parsed body when requiresParsedBody is true", async () => {
-        let receivedBody: unknown = undefined;
+        let receivedBody: unknown;
 
         const fastify = Fastify(fastifyOpts);
         await fastify.register(oas3Plugin, {
@@ -1369,7 +1363,7 @@ describe("autowired security", () => {
             },
             oas: { security: { BodyAwareKey: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1422,7 +1416,7 @@ describe("autowired security", () => {
             },
             oas: { security: { NoBodyKey: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1475,7 +1469,7 @@ describe("autowired security", () => {
             },
             oas: { security: { BodyCheckKey: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1520,7 +1514,7 @@ describe("autowired security", () => {
 
     describe("HTTP Bearer with body access", () => {
       test("handler receives parsed body when requiresParsedBody is true", async () => {
-        let receivedBody: unknown = undefined;
+        let receivedBody: unknown;
 
         const fastify = Fastify(fastifyOpts);
         await fastify.register(oas3Plugin, {
@@ -1552,7 +1546,7 @@ describe("autowired security", () => {
             },
             oas: { security: { BodyAwareBearer: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1561,7 +1555,7 @@ describe("autowired security", () => {
           method: "POST",
           path: "/test",
           headers: {
-            "Authorization": "Bearer valid",
+            Authorization: "Bearer valid",
             "Content-Type": "application/json",
           },
           payload: { message: "hello world" },
@@ -1574,7 +1568,7 @@ describe("autowired security", () => {
 
     describe("HTTP Basic with body access", () => {
       test("handler receives parsed body when requiresParsedBody is true", async () => {
-        let receivedBody: unknown = undefined;
+        let receivedBody: unknown;
 
         const fastify = Fastify(fastifyOpts);
         await fastify.register(oas3Plugin, {
@@ -1606,7 +1600,7 @@ describe("autowired security", () => {
             },
             oas: { security: { BodyAwareBasic: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1615,8 +1609,7 @@ describe("autowired security", () => {
           method: "POST",
           path: "/test",
           headers: {
-            "Authorization":
-              "Basic " + Buffer.from("user:pass").toString("base64"),
+            Authorization: `Basic ${Buffer.from("user:pass").toString("base64")}`,
             "Content-Type": "application/json",
           },
           payload: { value: 42 },
@@ -1629,8 +1622,8 @@ describe("autowired security", () => {
 
     describe("combined with passNullIfNoneProvided", () => {
       test("nullable API key handler receives both null value and body context", async () => {
-        let receivedValue: string | null | undefined = undefined;
-        let receivedBody: unknown = undefined;
+        let receivedValue: string | null | undefined;
+        let receivedBody: unknown;
 
         const fastify = Fastify(fastifyOpts);
         await fastify.register(oas3Plugin, {
@@ -1669,7 +1662,7 @@ describe("autowired security", () => {
             },
             oas: { security: { NullableBodyKey: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1747,7 +1740,7 @@ describe("autowired security", () => {
               security: [{ RegularKey: [] }, { BodyKey: [] }],
             },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1829,7 +1822,7 @@ describe("autowired security", () => {
               security: { RegularKey: [], BodyKey: [] },
             },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();
@@ -1902,7 +1895,7 @@ describe("autowired security", () => {
               method: "GET",
               path: "/openapi.json",
             })
-          ).body
+          ).body,
         );
 
         expect(jsonDoc.components.securitySchemes.BodyKey).toEqual({
@@ -1911,7 +1904,7 @@ describe("autowired security", () => {
           name: "X-Body-Key",
         });
         expect(
-          jsonDoc.components.securitySchemes.BodyKey.requiresParsedBody
+          jsonDoc.components.securitySchemes.BodyKey.requiresParsedBody,
         ).toBeUndefined();
         expect(jsonDoc.components.securitySchemes.BodyKey.fn).toBeUndefined();
       });
@@ -1919,8 +1912,8 @@ describe("autowired security", () => {
 
     describe("raw body access for signature validation", () => {
       test("handler can access rawBody via request when fastify-raw-body is registered", async () => {
-        let receivedRawBody: string | Buffer | undefined = undefined;
-        let receivedParsedBody: unknown = undefined;
+        let receivedRawBody: string | Buffer | undefined;
+        let receivedParsedBody: unknown;
 
         const fastify = Fastify(fastifyOpts);
         await fastify.register(fastifyRawBody, {
@@ -1944,7 +1937,7 @@ describe("autowired security", () => {
 
                   // Simulate signature validation
                   const expectedSig = Buffer.from(
-                    request.rawBody as string
+                    request.rawBody as string,
                   ).toString("base64");
                   return signature === expectedSig
                     ? { ok: true }
@@ -1965,7 +1958,7 @@ describe("autowired security", () => {
             },
             oas: { security: { SignatureAuth: [] } },
           },
-          async () => "ok"
+          async () => "ok",
         );
 
         await fastify.ready();

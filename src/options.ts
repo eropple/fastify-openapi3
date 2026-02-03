@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { type RouteOptions } from "fastify";
-import {
-  type CallbacksObject,
-  type ExternalDocumentationObject,
-  type InfoObject,
-  type OpenApiBuilder,
-  type OperationObject,
-  type ParameterStyle,
-  type PathItemObject,
+import type { RouteOptions } from "fastify";
+import type {
+  CallbacksObject,
+  ExternalDocumentationObject,
+  InfoObject,
+  OpenApiBuilder,
+  OperationObject,
+  ParameterStyle,
+  PathItemObject,
 } from "openapi3-ts";
 
-import {
-  type OAS3RouteSecuritySchemeSpec,
-  type OAS3AutowireSecurityOptions,
+import type {
+  OAS3AutowireSecurityOptions,
+  OAS3RouteSecuritySchemeSpec,
 } from "./autowired-security/index.js";
-import { type OperationIdFn } from "./operation-helpers.js";
+import type { OperationIdFn } from "./operation-helpers.js";
 
 export type OASBuilderFn = (oas: OpenApiBuilder) => void;
 export type PathItemFn = (pathItem: PathItemObject) => void;
@@ -62,7 +62,7 @@ export interface OAS3PluginPublishOptions {
 
 export type OperationBuildFn = (
   route: RouteOptions,
-  operation: OperationObject
+  operation: OperationObject,
 ) => void;
 
 export type OASVendorPrefixedField = `x-${string}`;

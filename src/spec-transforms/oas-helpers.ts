@@ -1,12 +1,12 @@
-import {
-  type OpenAPIObject,
-  type OperationObject,
-  type PathItemObject,
-  type ReferenceObject,
-  type SchemaObject,
+import type {
+  OpenAPIObject,
+  OperationObject,
+  PathItemObject,
+  ReferenceObject,
+  SchemaObject,
 } from "openapi3-ts";
 
-import { type TaggedSchema } from "../schemas.js";
+import type { TaggedSchema } from "../schemas.js";
 import { isNotReferenceObject, isTruthy } from "../util.js";
 
 export type TaggedSchemaObject = SchemaObject & TaggedSchema;
@@ -28,7 +28,7 @@ export function operations(path: PathItemObject): Array<OperationObject> {
 
 export function mapPathItems<T>(
   oas: OpenAPIObject,
-  fn: (path: PathItemObject) => T
+  fn: (path: PathItemObject) => T,
 ): Array<T> {
   return Object.values(oas.paths || {})
     .filter(isNotReferenceObject)

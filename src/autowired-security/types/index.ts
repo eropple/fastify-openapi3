@@ -1,7 +1,7 @@
-import { type FastifyReply, type FastifyRequest } from "fastify";
+import type { FastifyReply, FastifyRequest } from "fastify";
 
-import { type HandlerRetval } from "./handlers.js";
-import { type OAS3PluginSecurityScheme } from "./security-schemes.js";
+import type { HandlerRetval } from "./handlers.js";
+import type { OAS3PluginSecurityScheme } from "./security-schemes.js";
 
 export * from "./security-schemes.js";
 
@@ -10,7 +10,7 @@ export type OAS3RouteSecuritySchemeSpec = Record<string, Array<string>>;
 export type OAS3AutowireRequestFailedHandler = (
   result: HandlerRetval & { ok: false },
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) => void | Promise<void>;
 
 export interface OAS3AutowireSecurityOptions {
