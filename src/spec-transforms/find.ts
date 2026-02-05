@@ -11,7 +11,6 @@ import type {
   ResponsesObject,
   SchemaObject,
 } from "openapi3-ts";
-import { Type } from "typebox";
 import { isFalsy } from "utility-types";
 
 import {
@@ -42,13 +41,19 @@ function findTaggedSchemasInSchemas(
     return isTaggedSchema(s) ? [s] : [];
   }
 
+  // Note: We check s.type === 'array' directly instead of using Type.IsArray(s)
+  // because Fastify's schema processing strips TypeBox's internal ~kind property,
+  // which Type.IsArray relies on. By checking the JSON Schema type directly,
+  // we ensure this works even after Fastify processes the schema.
+  const isArraySchema = s.type === "array" && s.items !== undefined;
+
   const ret = [
     s.allOf ?? [],
     s.anyOf ?? [],
     s.oneOf ?? [],
     Object.values(s.properties ?? {}),
     s.additionalProperties,
-    Type.IsArray(s) && [s.items],
+    isArraySchema && [s.items],
   ]
     .flat()
     .filter(isNotPrimitive)

@@ -309,6 +309,75 @@ describe("schema canonicalization", () => {
 });
 
 describe("schema fixup", () => {
+  test("properly replaces array items with $ref for nested schemaType (from components)", () => {
+    const Inner = schemaType("Inner", Type.Object({ foo: Type.String() }));
+    const Outer = schemaType(
+      "Outer",
+      Type.Object({ items: Type.Array(Inner) }),
+    );
+
+    const oas: OpenAPIObject = {
+      ...baseOas,
+      components: {
+        schemas: {
+          Outer: Outer,
+        },
+      },
+    };
+
+    canonicalizeAnnotatedSchemas(oas);
+
+    // Both schemas should be in components
+    expect(Object.keys(oas.components?.schemas ?? {})).toContain("Inner");
+    expect(Object.keys(oas.components?.schemas ?? {})).toContain("Outer");
+
+    // The array's items should be a $ref, not the inline schema
+    const outerSchema = oas.components?.schemas?.Outer as SchemaObject;
+    const itemsProperty = outerSchema.properties?.items as SchemaObject;
+    expect(itemsProperty.type).toBe("array");
+    expect(itemsProperty.items).toEqual({ $ref: "#/components/schemas/Inner" });
+  });
+
+  test("properly replaces array items with $ref for nested schemaType (from path response)", () => {
+    const Inner = schemaType("Inner", Type.Object({ foo: Type.String() }));
+    const Outer = schemaType(
+      "Outer",
+      Type.Object({ items: Type.Array(Inner) }),
+    );
+
+    const oas: OpenAPIObject = {
+      ...baseOas,
+      paths: {
+        "/test": {
+          get: {
+            responses: {
+              200: {
+                description: "OK",
+                content: {
+                  [APPLICATION_JSON]: {
+                    schema: Outer,
+                  },
+                },
+              },
+            },
+          } as OperationObject,
+        },
+      },
+    };
+
+    canonicalizeAnnotatedSchemas(oas);
+
+    // Both schemas should be in components
+    expect(Object.keys(oas.components?.schemas ?? {})).toContain("Inner");
+    expect(Object.keys(oas.components?.schemas ?? {})).toContain("Outer");
+
+    // The array's items should be a $ref, not the inline schema
+    const outerSchema = oas.components?.schemas?.Outer as SchemaObject;
+    const itemsProperty = outerSchema.properties?.items as SchemaObject;
+    expect(itemsProperty.type).toBe("array");
+    expect(itemsProperty.items).toEqual({ $ref: "#/components/schemas/Inner" });
+  });
+
   test("properly canonicalizes schema with multiple uses", () => {
     const oas: OpenAPIObject = {
       ...baseOas,
