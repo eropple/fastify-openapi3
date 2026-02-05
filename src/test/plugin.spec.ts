@@ -566,6 +566,214 @@ describe("plugin", () => {
     });
   });
 
+  describe("nested schemaType in arrays", () => {
+    test("schema symbols survive when passed to route handlers", async () => {
+      const Inner = schemaType("Inner", Type.Object({ foo: Type.String() }));
+      const Outer = schemaType(
+        "Outer",
+        Type.Object({ items: Type.Array(Inner) }),
+      );
+
+      const { SCHEMA_NAME_PROPERTY } = await import("../constants.js");
+      const { isTaggedSchema } = await import("../util.js");
+
+      // Check our schemas before Fastify touches them
+      expect(isTaggedSchema(Inner)).toBe(true);
+      expect(isTaggedSchema(Outer)).toBe(true);
+      expect(isTaggedSchema(Outer.properties.items.items)).toBe(true);
+
+      const fastify = Fastify(fastifyOpts);
+
+      // Track what the schema looks like in onRoute
+      let capturedSchema: unknown;
+
+      fastify.addHook("onRoute", (routeOptions) => {
+        if (routeOptions.url === "/test") {
+          capturedSchema = routeOptions.schema?.response?.[200];
+        }
+      });
+
+      await fastify.register(oas3Plugin, { ...pluginOpts });
+
+      await fastify.register(async (fastify: FastifyInstance) => {
+        fastify.get("/test", {
+          schema: {
+            response: {
+              200: Outer,
+            },
+          },
+          oas: {},
+          handler: async () => ({ items: [{ foo: "bar" }] }),
+        });
+      });
+
+      await fastify.ready();
+
+      // Check if the schema passed to onRoute still has the symbol
+      expect(capturedSchema).toBeDefined();
+      // Check that the top-level schema retains its tag
+      expect(isTaggedSchema(capturedSchema)).toBe(true);
+
+      // Check that the nested Inner schema within the array also retains its tag
+      const capturedInner = (capturedSchema as Record<string, unknown>)
+        ?.properties as Record<string, unknown>;
+      const capturedItems = capturedInner?.items as Record<string, unknown>;
+      const capturedItemsItems = capturedItems?.items;
+      expect(isTaggedSchema(capturedItemsItems)).toBe(true);
+    });
+
+    test("handles deeply nested arrays (array of arrays with schemaType)", async () => {
+      const Inner = schemaType("Inner", Type.Object({ foo: Type.String() }));
+      // Array of arrays of Inner
+      const Outer = schemaType(
+        "Outer",
+        Type.Object({ matrix: Type.Array(Type.Array(Inner)) }),
+      );
+
+      const fastify = Fastify(fastifyOpts);
+      await fastify.register(oas3Plugin, { ...pluginOpts });
+
+      await fastify.register(async (fastify: FastifyInstance) => {
+        fastify.get("/test", {
+          schema: {
+            response: {
+              200: Outer,
+            },
+          },
+          oas: {},
+          handler: async () => ({ matrix: [[{ foo: "bar" }]] }),
+        });
+      });
+
+      await fastify.ready();
+
+      const jsonResponse = await fastify.inject({
+        method: "GET",
+        path: "/openapi.json",
+      });
+
+      const jsonDoc = JSON.parse(jsonResponse.body);
+
+      // Both schemas should be in components/schemas
+      expect(Object.keys(jsonDoc.components?.schemas ?? {})).toContain("Inner");
+      expect(Object.keys(jsonDoc.components?.schemas ?? {})).toContain("Outer");
+
+      // The deeply nested Inner should be referenced via $ref
+      const outerSchema = jsonDoc.components?.schemas?.Outer;
+      const matrixItems = outerSchema.properties.matrix.items; // the inner array
+      expect(matrixItems.type).toBe("array");
+      expect(matrixItems.items).toEqual({
+        $ref: "#/components/schemas/Inner",
+      });
+    });
+
+    test("handles nullable arrays with schemaType via Type.Union", async () => {
+      const Inner = schemaType("Inner", Type.Object({ foo: Type.String() }));
+      // Nullable array: Type.Array(Inner) | null
+      const Outer = schemaType(
+        "Outer",
+        Type.Object({
+          items: Type.Union([Type.Array(Inner), Type.Null()]),
+        }),
+      );
+
+      const fastify = Fastify(fastifyOpts);
+      await fastify.register(oas3Plugin, { ...pluginOpts });
+
+      await fastify.register(async (fastify: FastifyInstance) => {
+        fastify.get("/test", {
+          schema: {
+            response: {
+              200: Outer,
+            },
+          },
+          oas: {},
+          handler: async () => ({ items: [{ foo: "bar" }] }),
+        });
+      });
+
+      await fastify.ready();
+
+      const jsonResponse = await fastify.inject({
+        method: "GET",
+        path: "/openapi.json",
+      });
+
+      const jsonDoc = JSON.parse(jsonResponse.body);
+
+      // Both schemas should be in components/schemas
+      expect(Object.keys(jsonDoc.components?.schemas ?? {})).toContain("Inner");
+      expect(Object.keys(jsonDoc.components?.schemas ?? {})).toContain("Outer");
+
+      // The Inner schema inside the anyOf array branch should be a $ref
+      const outerSchema = jsonDoc.components?.schemas?.Outer;
+      const itemsProperty = outerSchema.properties.items;
+
+      // TypeBox generates anyOf for Union
+      expect(itemsProperty.anyOf).toBeDefined();
+
+      // Find the array variant in anyOf
+      const arrayVariant = itemsProperty.anyOf.find(
+        (v: { type: string }) => v.type === "array",
+      );
+      expect(arrayVariant).toBeDefined();
+      expect(arrayVariant.items).toEqual({
+        $ref: "#/components/schemas/Inner",
+      });
+    });
+
+    test("correctly extracts and references schemaTypes nested in Type.Array", async () => {
+      const Inner = schemaType("Inner", Type.Object({ foo: Type.String() }));
+      const Outer = schemaType(
+        "Outer",
+        Type.Object({ items: Type.Array(Inner) }),
+      );
+
+      const fastify = Fastify(fastifyOpts);
+      await fastify.register(oas3Plugin, { ...pluginOpts });
+
+      await fastify.register(async (fastify: FastifyInstance) => {
+        fastify.get("/test", {
+          schema: {
+            response: {
+              200: Outer,
+            },
+          },
+          oas: {},
+          handler: async () => ({ items: [{ foo: "bar" }] }),
+        });
+      });
+
+      await fastify.ready();
+
+      const jsonResponse = await fastify.inject({
+        method: "GET",
+        path: "/openapi.json",
+      });
+
+      const jsonDoc = JSON.parse(jsonResponse.body);
+
+      // Both schemas should be in components/schemas
+      expect(Object.keys(jsonDoc.components?.schemas ?? {})).toContain("Inner");
+      expect(Object.keys(jsonDoc.components?.schemas ?? {})).toContain("Outer");
+
+      // The Outer schema's items property should reference Inner via $ref
+      const outerSchema = jsonDoc.components?.schemas?.Outer;
+      expect(outerSchema.properties.items.type).toBe("array");
+      expect(outerSchema.properties.items.items).toEqual({
+        $ref: "#/components/schemas/Inner",
+      });
+
+      // The response should reference Outer
+      const operation = jsonDoc.paths?.["/test"]?.get;
+      expect(
+        operation?.responses?.["200"]?.content?.[APPLICATION_JSON]?.schema,
+      ).toEqual({
+        $ref: "#/components/schemas/Outer",
+      });
+    });
+  });
+
   describe("vendor extensions", () => {
     test("correctly handles vendorPrefixedFields in operations", async () => {
       const fastify = Fastify(fastifyOpts);
